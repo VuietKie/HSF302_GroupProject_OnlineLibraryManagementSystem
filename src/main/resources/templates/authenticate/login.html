@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+<div class="container vh-100 d-flex justify-content-center align-items-center">
+    <div class="card shadow p-4" style="width: 400px;">
+        <h3 class="text-center mb-4">Đăng nhập</h3>
+
+        <form th:action="@{/login}" th:object="${user}" method="post">
+
+            <div class="alert alert-danger"
+                 th:if="${error}"
+                 th:text="${error}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email"
+                       th:field="*{email}"
+                       class="form-control"
+                       placeholder="Nhập Email ở đây">
+
+                <div class="text-danger"
+                     th:if="${#fields.hasErrors('email')}"
+                     th:errors="*{email}">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password"
+                       th:field="*{password}"
+                       class="form-control"
+                       placeholder="Nhập mật khẩu ở đây">
+
+                <div class="text-danger"
+                     th:if="${#fields.hasErrors('password')}"
+                     th:errors="*{password}">
+                </div>
+            </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    Đăng nhập
+                </button>
+
+            <a href="register" class="mt-10">chưa có tài khoản ? Đăng ký</a>
+        </form>
+    </div>
+</div>
+</body>
+</html>
