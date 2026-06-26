@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý tác giả</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Quản lý tác giả</h2>
+        <a class="btn btn-primary" th:href="@{/admin/authors/new}">+ Thêm tác giả</a>
+    </div>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên tác giả</th>
+                <th style="width: 180px;">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a: ${authors}">
+            <td th:text="${a.authorId}"></td>
+            <td th:text="${a.name}"></td>
+            <td>
+                <a class="btn btn-sm btn-primary" th:href="@{/admin/authors/edit/{id}(id=${a.authorId})}">Sửa</a>
+                <a class="btn btn-sm btn-danger" th:href="@{/admin/authors/delete/{id}(id=${a.authorId})}" onclick="return confirm('Bạn có chắc chắn muốn xóa tác giả này?')">Xóa</a>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(authors)}">
+            <td colspan="3" class="text-center text-muted">Chưa có tác giả nào</td>
+        </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/homepage}">Về trang chủ</a>
+</body>
+</html>
