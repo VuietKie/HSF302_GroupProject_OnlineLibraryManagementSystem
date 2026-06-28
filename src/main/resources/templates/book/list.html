@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Quản lý sách</h2>
+        <a class="btn btn-primary" th:href="@{/admin/books/new}">+ Thêm sách</a>
+    </div>
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Ảnh</th>
+                <th>Tên sách</th>
+                <th>Tác giả</th>
+                <th>Thể loại</th>
+                <th>Số lượng</th>
+                <th>Trạng thái</th>
+                <th style="width: 160px;">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="book : ${books}">
+                <td>
+                    <img th:if="${book.coverImg!=null}" th:src="@{${book.coverImg}}" width="50" alt="cover">
+                    <span th:if="${book.coverImg==null}">-</span>
+                </td>
+                <td th:text="${book.title}"></td>
+                <td>
+                    <span th:each="a,it:${book.authors}" th:text="${a.name + (it.last ? '' : ', ')}"></span>
+                </td>
+                <td> <span th:each="c,it : ${book.categories}" th:text="${c.categoryName+ (it.last? '':', ')}"></span> </td>
+                <td><span th:text="${book.availableCopies}"></span>/<span th:text="${book.totalCopies}"></span> </td>
+                <td th:text="${book.status}"></td>
+                <td>
+                    <a class="btn btn-sm btn-warning" th:href="@{/admin/books/edit/{id}(id=${book.bookId})}">Sửa</a>
+                    <a class="btn btn-sm btn-outline-danger" th:href="@{/admin/books/delete/{id}(id=${book.bookId})}" onclick="return confirm('Bạn có chắc chắn muốn xóa sách này không?')">Xóa</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(books)}">
+                <td colspan="7" class="text-center text-muted">Không có sách nào.</td>
+            </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/homepage}">Quay lại trang chủ</a>
+</body>
+</html>

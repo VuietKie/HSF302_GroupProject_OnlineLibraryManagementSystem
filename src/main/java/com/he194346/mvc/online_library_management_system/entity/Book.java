@@ -4,6 +4,7 @@ import com.he194346.mvc.online_library_management_system.enums.BookStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Nationalized;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +19,10 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long bookId;
 
+    @Nationalized
     private String title;
+
+    @Nationalized
     private String description;
     private String coverImg;
 
