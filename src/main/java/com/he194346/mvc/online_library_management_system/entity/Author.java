@@ -3,6 +3,7 @@ package com.he194346.mvc.online_library_management_system.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Nationalized;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,6 +18,7 @@ public class Author {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long authorId;
 
+    @Nationalized
     private String name;
 
     @ManyToMany(mappedBy = "authors", fetch = FetchType.LAZY)

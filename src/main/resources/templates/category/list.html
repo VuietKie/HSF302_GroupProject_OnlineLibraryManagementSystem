@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý thể loại</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Quản lý thể loại</h2>
+        <a class="btn btn-primary" th:href="@{/admin/categories/new}">+ Thêm thể loại</a>
+    </div>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <td>ID</td>
+                <td>Tên thể loại</td>
+                <td style="width: 180px;">Hành động</td>
+            </tr>
+        </thead>
+        <tbody>
+        <tr th:each="c: ${categories}">
+            <td th:text="${c.categoryId}"></td>
+            <td th:text="${c.categoryName}"></td>
+            <td>
+                <a class="btn btn-sm btn-warning" th:href="@{/admin/categories/edit/{id}(id=${c.categoryId})}">Sửa</a>
+                <a class="btn btn-sm btn-danger" th:href="@{/admin/categories/delete/{id}(id=${c.categoryId})}" onclick="return confirm('Bạn có chắc chắn muốn xóa thể loại này không?')">Xóa</a>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(categories)}">
+            <td colspan="3" class="text-center text-muted">Chưa có thể loại nào</td>
+        </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/homepage}">Về trang chủ</a>
+</body>
+</html>
