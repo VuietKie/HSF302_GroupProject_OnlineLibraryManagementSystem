@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Giữ chỗ sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Giữ chỗ sách</h2>
+        <a class="btn btn-outline-secondary" th:href="@{/reader/reservations}">Phiếu của tôi</a>
+    </div>
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Tên sách</th>
+                <th>Tác giả</th>
+                <th>Còn lại</th>
+                <th style="width: 140px;">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="b : ${books}">
+                <td th:text="${b.title}"></td>
+                <td>
+                    <span th:each="a,it : ${b.authors}" th:text="${a.name + (it.last ? '' : ', ')}"></span>
+                </td>
+                <td th:text="${b.availableCopies}"></td>
+                <td>
+                    <!-- Form POST không cần csrf token vì SecurityConfig đã tắt csrf -->
+                    <form method="post" th:action="@{/reader/reservations/reserve/{id}(id=${b.bookId})}">
+                        <button class="btn btn-sm btn-primary">Giữ chỗ</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(books)}">
+                <td colspan="4" class="text-center text-muted">Không có sách nào để giữ chỗ.</td>
+            </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/homepage}">Về trang chủ</a>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phiếu giữ chỗ của tôi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Phiếu giữ chỗ của tôi</h2>
+        <a class="btn btn-primary" th:href="@{/reader/reservations/books}">Giữ chỗ sách mới</a>
+    </div>
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Sách</th>
+                <th>Ngày giữ</th>
+                <th>Hết hạn</th>
+                <th>Trạng thái</th>
+                <th style="width: 120px;">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="r : ${reservations}">
+                <td>
+                    <span th:each="br,it : ${r.books}" th:text="${br.book.title + (it.last ? '' : ', ')}"></span>
+                </td>
+                <td th:text="${r.reservedAt}"></td>
+                <td th:text="${r.expiredAt}"></td>
+                <td><span class="badge bg-secondary" th:text="${r.status}"></span></td>
+                <td>
+                    <!-- Chỉ phiếu còn chờ duyệt mới huỷ được; form POST không cần csrf vì SecurityConfig đã tắt -->
+                    <form th:if="${r.status.name() == 'PENDING'}" method="post"
+                          th:action="@{/reader/reservations/cancel/{id}(id=${r.reservationId})}">
+                        <button class="btn btn-sm btn-outline-danger">Huỷ</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(reservations)}">
+                <td colspan="5" class="text-center text-muted">Bạn chưa có phiếu giữ chỗ nào.</td>
+            </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/homepage}">Về trang chủ</a>
+</body>
+</html>
