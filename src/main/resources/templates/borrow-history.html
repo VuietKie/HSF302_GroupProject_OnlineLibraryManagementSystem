@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Borrow History</title>
+    <!-- Simple Bootstrap 5 for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4">My Borrow History</h2>
+    <div th:if="${#lists.isEmpty(borrowHistory)}" class="alert alert-info">
+        You have no borrow history.
+    </div>
+    <div th:if="${not #lists.isEmpty(borrowHistory)}">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Record ID</th>
+                    <th>Borrow Date</th>
+                    <th>Due Date</th>
+                    <th>Return Date</th>
+                    <th>Status</th>
+                    <th>Fine Status</th>
+                    <th>Fine Amount ($)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="record : ${borrowHistory}">
+                    <td th:text="${record.borrowRecordId}"></td>
+                    <td th:text="${#temporals.format(record.borrowDate, 'dd-MM-yyyy HH:mm')}"></td>
+                    <td th:text="${#temporals.format(record.dueDate, 'dd-MM-yyyy HH:mm')}"></td>
+                    <td th:text="${record.returnDate != null ? #temporals.format(record.returnDate, 'dd-MM-yyyy HH:mm') : 'Not Returned'}"></td>
+                    <td>
+                        <span th:classappend="${record.status.name() == 'BORROWED'} ? 'badge bg-warning' : 'badge bg-success'" th:text="${record.status}"></span>
+                    </td>
+                    <td th:text="${record.fineStatus}"></td>
+                    <td th:text="${record.fineAmount != null ? record.fineAmount : '0.0'}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

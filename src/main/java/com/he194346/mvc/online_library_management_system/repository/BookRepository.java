@@ -1,4 +1,13 @@
 package com.he194346.mvc.online_library_management_system.repository;
 
-public interface BookRepository {
+import com.he194346.mvc.online_library_management_system.entity.Book;
+import com.he194346.mvc.online_library_management_system.enums.BookStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface BookRepository extends JpaRepository<Book, Long> {
+    List<Book> findByStatus(BookStatus status);
 }
