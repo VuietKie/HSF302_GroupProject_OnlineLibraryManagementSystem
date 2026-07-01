@@ -27,6 +27,9 @@ public class Reservation {
 
     private LocalDateTime expiredAt;
 
+    // Thời điểm reader gửi reservation cho Librarian phê duyệt.
+    private LocalDateTime submittedAt;
+
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 

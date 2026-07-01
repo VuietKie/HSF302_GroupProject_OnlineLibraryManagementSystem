@@ -31,6 +31,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @EntityGraph(attributePaths = {"books", "books.book"})
     List<Reservation> findAllByReaderEmailOrderByReservedAtDesc(String email);
 
+    @EntityGraph(attributePaths = {"reader", "books", "books.book"})
+    @Query("""
+            select distinct r from Reservation r
+            where r.status = :status
+            order by r.submittedAt asc
+            """)
+    List<Reservation> findAllByStatusOrderBySubmittedAt(@Param("status") ReservationStatus status);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select distinct r from Reservation r

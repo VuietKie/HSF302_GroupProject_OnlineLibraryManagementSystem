@@ -9,6 +9,7 @@ public interface ReservationService {
     Long createHolding(String readerEmail, ReservationRequestDTO request);
     Reservation findOwnedReservation(Long reservationId, String readerEmail);
     List<Reservation> findByReader(String readerEmail);
+    List<Reservation> findWaitingForApproval();
     void submitForApproval(Long reservationId, String readerEmail);
     void expireOverdueHoldings();
 }

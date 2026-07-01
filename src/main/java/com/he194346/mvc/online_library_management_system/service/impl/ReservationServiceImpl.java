@@ -78,6 +78,12 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Reservation> findWaitingForApproval() {
+        return reservationRepository.findAllByStatusOrderBySubmittedAt(ReservationStatus.WAITING_FOR_APPROVAL);
+    }
+
+    @Override
     @Transactional(noRollbackFor = CustomException.class)
     public void submitForApproval(Long reservationId, String readerEmail) {
         // Khóa reservation để scheduler không thể đồng thời chuyển nó sang EXPIRED.
@@ -94,6 +100,7 @@ public class ReservationServiceImpl implements ReservationService {
         // Sau khi gửi duyệt, reservation được chờ Librarian xử lý không giới hạn thời gian.
         reservation.setStatus(ReservationStatus.WAITING_FOR_APPROVAL);
         reservation.setExpiredAt(null);
+        reservation.setSubmittedAt(LocalDateTime.now());
         reservationRepository.save(reservation);
     }
 
