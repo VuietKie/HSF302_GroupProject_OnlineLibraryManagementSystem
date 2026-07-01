@@ -13,8 +13,13 @@
         <form th:action="@{/login}" th:object="${user}" method="post">
 
             <div class="alert alert-danger"
-                 th:if="${error}"
-                 th:text="${error}">
+                 th:if="${param.error}">
+                Email hoặc mật khẩu không đúng, hoặc tài khoản đang bị khóa.
+            </div>
+
+            <div class="alert alert-success"
+                 th:if="${param.logout}">
+                Đăng xuất thành công.
             </div>
 
             <div class="mb-3">

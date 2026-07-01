@@ -1,15 +1,16 @@
 package com.he194346.mvc.online_library_management_system.service.impl;
 
 import com.he194346.mvc.online_library_management_system.entity.User;
+import com.he194346.mvc.online_library_management_system.enums.UserStatus;
 import com.he194346.mvc.online_library_management_system.repository.UserRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -27,6 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .withUsername(user.getEmail())
                 .password(user.getPassword())
                 .roles(user.getRole().name())
+                .disabled(user.getStatus() != UserStatus.ACTIVE)
                 .build();
     }
 }
