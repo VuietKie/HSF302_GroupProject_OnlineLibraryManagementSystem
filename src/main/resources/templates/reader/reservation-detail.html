@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chi tiết reservation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f4f7fb; }
+        .detail-card { border: 0; border-radius: 18px; }
+    </style>
+</head>
+<body>
+<main class="container py-5" style="max-width: 850px">
+    <a class="text-decoration-none" th:href="@{/reader/reservations}">&larr; Danh sách reservation</a>
+    <div class="alert alert-success mt-3" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger mt-3" th:if="${error}" th:text="${error}"></div>
+
+    <div class="card detail-card shadow-sm mt-3">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <div class="text-muted small">RESERVATION</div>
+                    <h1 class="h3" th:text="|#${reservation.reservationId}|">#1</h1>
+                </div>
+                <span class="badge fs-6"
+                      th:classappend="${reservation.status.name() == 'HOLDING'} ? 'bg-warning text-dark' :
+                        (${reservation.status.name() == 'WAITING_FOR_APPROVAL'} ? 'bg-info text-dark' :
+                        (${reservation.status.name() == 'EXPIRED'} ? 'bg-secondary' : 'bg-primary'))"
+                      th:text="${reservation.status}">HOLDING</span>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="text-muted small">Tạo lúc</div>
+                    <strong th:text="${#temporals.format(reservation.reservedAt, 'dd/MM/yyyy HH:mm')}"></strong>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-muted small"
+                         th:text="${reservation.expiredAt != null ? 'Hạn gửi duyệt' : 'Thời gian chờ duyệt'}">
+                        Hạn gửi duyệt
+                    </div>
+                    <strong th:if="${reservation.expiredAt != null}"
+                            th:text="${#temporals.format(reservation.expiredAt, 'dd/MM/yyyy HH:mm')}"></strong>
+                    <strong class="text-success" th:if="${reservation.expiredAt == null}">
+                        Không giới hạn
+                    </strong>
+                </div>
+            </div>
+
+            <div class="alert alert-warning" th:if="${reservation.status.name() == 'HOLDING'}">
+                Thời gian giữ còn lại: <strong id="countdown">đang tính...</strong>
+            </div>
+
+            <h2 class="h5 mt-4">Sách đã chọn</h2>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead><tr><th>Tên sách</th><th class="text-end">Số lượng</th></tr></thead>
+                    <tbody>
+                    <tr th:each="item : ${reservation.books}">
+                        <td th:text="${item.book.title}">Tên sách</td>
+                        <td class="text-end fw-bold" th:text="${item.quantity}">1</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <form class="text-end mt-4" method="post"
+                  th:if="${reservation.status.name() == 'HOLDING'}"
+                  th:action="@{/reader/reservations/{id}/submit(id=${reservation.reservationId})}">
+                <button class="btn btn-primary px-4" type="submit">Gửi thư viện phê duyệt</button>
+            </form>
+        </div>
+    </div>
+</main>
+<script th:if="${reservation.status.name() == 'HOLDING'}" th:inline="javascript">
+    const expiry = new Date(/*[[${reservation.expiredAt}]]*/ '').getTime();
+    const element = document.getElementById('countdown');
+    function updateCountdown() {
+        const remaining = expiry - Date.now();
+        if (remaining <= 0) {
+            element.textContent = 'đã hết hạn (hệ thống đang cập nhật)';
+            return;
+        }
+        const hours = Math.floor(remaining / 3600000);
+        const minutes = Math.floor((remaining % 3600000) / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        element.textContent = `${hours} giờ ${minutes} phút ${seconds} giây`;
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+</script>
+</body>
+</html>
