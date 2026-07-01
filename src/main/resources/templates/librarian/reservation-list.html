@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reservation chờ phê duyệt</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7fb; }
+        .content-card { border: 0; border-radius: 16px; }
+    </style>
+</head>
+<body>
+<main class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a class="text-decoration-none" th:href="@{/homepage}">&larr; Trang chủ</a>
+            <h1 class="h3 mt-2 mb-1">Reservation chờ phê duyệt</h1>
+            <p class="text-muted mb-0">Danh sách được ưu tiên theo thời gian gửi sớm nhất.</p>
+        </div>
+    </div>
+
+    <div class="card content-card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Mã</th>
+                    <th>Người đọc</th>
+                    <th>Sách yêu cầu</th>
+                    <th>Thời gian gửi</th>
+                    <th>Trạng thái</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="reservation : ${reservations}">
+                    <td class="fw-bold" th:text="|#${reservation.reservationId}|">#1</td>
+                    <td>
+                        <div class="fw-semibold" th:text="${reservation.reader.fullName}">Người đọc</div>
+                        <small class="text-muted" th:text="${reservation.reader.email}">email</small>
+                    </td>
+                    <td>
+                        <div th:each="item : ${reservation.books}">
+                            <span th:text="${item.book.title}">Tên sách</span>
+                            <span class="badge bg-light text-dark border" th:text="|x${item.quantity}|">x1</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span th:if="${reservation.submittedAt != null}"
+                              th:text="${#temporals.format(reservation.submittedAt, 'dd/MM/yyyy HH:mm:ss')}"></span>
+                        <span class="text-muted" th:if="${reservation.submittedAt == null}">Chưa ghi nhận</span>
+                    </td>
+                    <td><span class="badge bg-info text-dark">WAITING_FOR_APPROVAL</span></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(reservations)}">
+                    <td colspan="5" class="text-center text-muted py-5">
+                        Hiện không có reservation nào đang chờ phê duyệt.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>
