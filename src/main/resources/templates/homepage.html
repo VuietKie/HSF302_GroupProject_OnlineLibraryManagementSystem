@@ -14,6 +14,8 @@
     <a class="btn btn-outline-primary" href="/admin/categories">Quản lý thể loại(UC09)</a>
     <a class="btn btn-outline-primary" href="/admin/books">Quản lý thể sách(UC08)</a>
     <a class="btn btn-outline-primary" href="/librarian/returns">Ghi nhận trả sách (UC07)</a>
+    <a class="btn btn-outline-success" th:if="${#strings.contains(role.toString(), 'ROLE_READER')}"
+       th:href="@{/reader/books}">Xem sách và đặt trước</a>
     <form th:action="@{/logout}" method="post" class="mt-4">
         <button class="btn btn-danger">Đăng xuất</button>
     </form>
