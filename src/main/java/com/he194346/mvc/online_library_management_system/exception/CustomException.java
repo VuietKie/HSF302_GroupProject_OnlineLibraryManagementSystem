@@ -4,7 +4,7 @@ import com.he194346.mvc.online_library_management_system.enums.ErrorCode;
 
 public class CustomException extends RuntimeException {
 
-    private ErrorCode code;
+    private final ErrorCode code;
 
     public CustomException(ErrorCode code, String message) {
         super(message);
