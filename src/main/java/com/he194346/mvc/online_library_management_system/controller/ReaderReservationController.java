@@ -21,10 +21,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/reader")
@@ -35,19 +35,18 @@ public class ReaderReservationController {
     private final ReservationService reservationService;
 
     @GetMapping("/books")
-    public String viewBooks(Model model) {
-        model.addAttribute("books", getActiveBooks());
+    public String viewBooks(@RequestParam(required = false) Long bookId, Model model) {
+        ReservationRequestDTO request = createInitialRequest(bookId);
+        loadBookList(model, request);
         return "reader/book-list";
     }
 
     @GetMapping("/reservations/new")
-    public String reservationForm(@RequestParam(required = false) Long bookId, Model model) {
-        List<Book> books = getAvailableBooks();
-        ReservationRequestDTO request = createReservationRequest(books, bookId);
-
-        model.addAttribute("reservationRequest", request);
-        model.addAttribute("books", books);
-        return "reader/reservation-form";
+    public String reservationForm(@RequestParam(required = false) Long bookId) {
+        if (bookId == null) {
+            return "redirect:/reader/books";
+        }
+        return "redirect:/reader/books?bookId=" + bookId;
     }
 
     @PostMapping("/reservations")
@@ -55,8 +54,9 @@ public class ReaderReservationController {
                                     BindingResult bindingResult, Authentication authentication, Model model,
                                     RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            loadReservationForm(model, request);
-            return "reader/reservation-form";
+            model.addAttribute("error", "Dữ liệu reservation không hợp lệ. Vui lòng kiểm tra lại.");
+            loadBookList(model, request);
+            return "reader/book-list";
         }
 
         try {
@@ -66,8 +66,8 @@ public class ReaderReservationController {
             return "redirect:/reader/reservations/" + reservationId;
         } catch (CustomException exception) {
             model.addAttribute("error", exception.getMessage());
-            loadReservationForm(model, request);
-            return "reader/reservation-form";
+            loadBookList(model, request);
+            return "reader/book-list";
         }
     }
 
@@ -95,78 +95,51 @@ public class ReaderReservationController {
         return "redirect:/reader/reservations/" + id;
     }
 
-    private ReservationRequestDTO createReservationRequest(List<Book> books, Long selectedBookId) {
+    private ReservationRequestDTO createInitialRequest(Long selectedBookId) {
         ReservationRequestDTO request = new ReservationRequestDTO();
-
-        for (Book book : books) {
-            int quantity = 0;
-            if (book.getBookId().equals(selectedBookId)) {
-                quantity = 1;
-            }
-
-            ReservationItemRequestDTO item = new ReservationItemRequestDTO();
-            item.setBookId(book.getBookId());
-            item.setQuantity(quantity);
-            request.getItems().add(item);
+        if (selectedBookId == null) {
+            return request;
         }
+
+        Optional<Book> result = bookRepository.findById(selectedBookId);
+        if (result.isEmpty()) {
+            return request;
+        }
+
+        Book book = result.get();
+        if (book.getStatus() != BookStatus.ACTIVE || book.getAvailableCopies() == null
+                || book.getAvailableCopies() <= 0) {
+            return request;
+        }
+
+        ReservationItemRequestDTO item = new ReservationItemRequestDTO();
+        item.setBookId(book.getBookId());
+        item.setQuantity(1);
+        request.getItems().add(item);
         return request;
     }
 
-    private void loadReservationForm(Model model, ReservationRequestDTO request) {
-        model.addAttribute("books", getBooksForRequest(request));
+    private void loadBookList(Model model, ReservationRequestDTO request) {
+        model.addAttribute("books", getActiveBooks());
+        model.addAttribute("reservationRequest", request);
+        model.addAttribute("selectedQuantities", getSelectedQuantities(request));
     }
 
     private List<Book> getActiveBooks() {
         return bookRepository.findAllByStatusOrderByTitleAsc(BookStatus.ACTIVE);
     }
 
-    private List<Book> getAvailableBooks() {
-        List<Book> availableBooks = new ArrayList<>();
-        List<Book> activeBooks = getActiveBooks();
-
-        for (Book book : activeBooks) {
-            Integer availableCopies = book.getAvailableCopies();
-            if (availableCopies != null && availableCopies > 0) {
-                availableBooks.add(book);
-            }
-        }
-        return availableBooks;
-    }
-
-    private List<Book> getBooksForRequest(ReservationRequestDTO request) {
-        List<Long> bookIds = getBookIdsFromRequest(request);
-        List<Book> booksFromDatabase = bookRepository.findAllById(bookIds);
-        Map<Long, Book> booksById = convertBookListToMap(booksFromDatabase);
-        List<Book> orderedBooks = new ArrayList<>();
-
-        for (Long bookId : bookIds) {
-            Book book = booksById.get(bookId);
-            if (book != null) {
-                orderedBooks.add(book);
-            }
-        }
-        return orderedBooks;
-    }
-
-    private List<Long> getBookIdsFromRequest(ReservationRequestDTO request) {
-        List<Long> bookIds = new ArrayList<>();
+    private Map<Long, Integer> getSelectedQuantities(ReservationRequestDTO request) {
+        Map<Long, Integer> selectedQuantities = new LinkedHashMap<>();
         if (request == null || request.getItems() == null) {
-            return bookIds;
+            return selectedQuantities;
         }
 
         for (ReservationItemRequestDTO item : request.getItems()) {
-            if (item != null && item.getBookId() != null) {
-                bookIds.add(item.getBookId());
+            if (item != null && item.getBookId() != null && item.getQuantity() != null && item.getQuantity() > 0) {
+                selectedQuantities.put(item.getBookId(), item.getQuantity());
             }
         }
-        return bookIds;
-    }
-
-    private Map<Long, Book> convertBookListToMap(List<Book> books) {
-        Map<Long, Book> booksById = new LinkedHashMap<>();
-        for (Book book : books) {
-            booksById.put(book.getBookId(), book);
-        }
-        return booksById;
+        return selectedQuantities;
     }
 }
