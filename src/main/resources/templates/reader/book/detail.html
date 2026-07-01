@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chi tiết sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+    <div class="container">
+        <a class="btn btn-outline-secondary mb-4" th:href="@{/reader/books}">Quay lại danh sách</a>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <img th:if="${book.coverImg != null}" th:src="@{${book.coverImg}}" class="img-fluid border" alt="cover">
+                <div th:if="${book.coverImg == null}" class="bg-light border d-flex align-items-center justify-content-center text-muted" style="height: 360px;">
+                    No cover
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <h2 th:text="${book.title}">Tên sách</h2>
+
+                <div class="mb-3">
+                    <span class="badge bg-success" th:if="${book.availableCopies != null and book.availableCopies > 0}">Còn sách</span>
+                    <span class="badge bg-secondary" th:if="${book.availableCopies == null or book.availableCopies <= 0}">Hết sách</span>
+                    <span class="ms-2" th:text="${book.availableCopies + '/' + book.totalCopies + ' bản có sẵn'}">0/0 bản có sẵn</span>
+                </div>
+
+                <dl class="row">
+                    <dt class="col-sm-3">Tác giả</dt>
+                    <dd class="col-sm-9">
+                        <span th:each="author,it : ${book.authorNames}" th:text="${author + (it.last ? '' : ', ')}"></span>
+                        <span th:if="${book.authorNames == null or book.authorNames.isEmpty()}">Chưa có</span>
+                    </dd>
+
+                    <dt class="col-sm-3">Thể loại</dt>
+                    <dd class="col-sm-9">
+                        <span th:each="category,it : ${book.categoryNames}" th:text="${category + (it.last ? '' : ', ')}"></span>
+                        <span th:if="${book.categoryNames == null or book.categoryNames.isEmpty()}">Chưa có</span>
+                    </dd>
+
+                    <dt class="col-sm-3">Mô tả</dt>
+                    <dd class="col-sm-9" th:text="${book.description != null and !book.description.isBlank() ? book.description : 'Chưa có mô tả'}">Mô tả</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
