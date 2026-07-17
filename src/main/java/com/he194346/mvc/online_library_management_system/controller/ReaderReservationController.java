@@ -6,6 +6,8 @@ import com.he194346.mvc.online_library_management_system.entity.Book;
 import com.he194346.mvc.online_library_management_system.enums.BookStatus;
 import com.he194346.mvc.online_library_management_system.exception.CustomException;
 import com.he194346.mvc.online_library_management_system.repository.BookRepository;
+import com.he194346.mvc.online_library_management_system.service.BookService;
+import com.he194346.mvc.online_library_management_system.service.CategoryService;
 import com.he194346.mvc.online_library_management_system.service.ReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ReaderReservationController {
 
-    private final BookRepository bookRepository;
+    private final BookService bookService;
+    private final CategoryService categoryService;
     private final ReservationService reservationService;
 
     @GetMapping("/books")
@@ -51,12 +54,17 @@ public class ReaderReservationController {
 
     @PostMapping("/reservations")
     public String createReservation(@Valid @ModelAttribute("reservationRequest") ReservationRequestDTO request,
-                                    BindingResult bindingResult, Authentication authentication, Model model,
+                                    BindingResult bindingResult, Authentication authentication,
+                                    @RequestParam(defaultValue = "0") int page,
+                                    @RequestParam(required = false) String title,
+                                    @RequestParam(required = false) String author,
+                                    @RequestParam(required = false) Long categoryId,
+                                    Model model,
                                     RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("error", "Dữ liệu reservation không hợp lệ. Vui lòng kiểm tra lại.");
-            loadBookList(model, request);
-            return "reader/book-list";
+            loadBookList(model, request, page, title, author, categoryId);
+            return "reader/book/list";
         }
 
         try {
@@ -66,8 +74,8 @@ public class ReaderReservationController {
             return "redirect:/reader/reservations/" + reservationId;
         } catch (CustomException exception) {
             model.addAttribute("error", exception.getMessage());
-            loadBookList(model, request);
-            return "reader/book-list";
+            loadBookList(model, request, page, title, author, categoryId);
+            return "reader/book/list";
         }
     }
 
@@ -95,6 +103,36 @@ public class ReaderReservationController {
         return "redirect:/reader/reservations/" + id;
     }
 
+    private void loadBookList(Model model, ReservationRequestDTO request, int page, String title, String author,
+                              Long categoryId) {
+        model.addAttribute("bookPage", bookService.searchActiveBooksForReader(title, author, categoryId, page));
+        model.addAttribute("allCategories", categoryService.findAll());
+        model.addAttribute("title", title);
+        model.addAttribute("author", author);
+        model.addAttribute("categoryId", categoryId);
+        model.addAttribute("hasFilters", bookService.hasReaderBookFilters(title, author, categoryId));
+        model.addAttribute("reservationRequest", request);
+        model.addAttribute("selectedQuantities", getSelectedQuantities(request));
+    }
+
+    private List<Book> getActiveBooks() {
+        return bookRepository.findAllByStatusOrderByTitleAsc(BookStatus.ACTIVE);
+    }
+
+    private Map<Long, Integer> getSelectedQuantities(ReservationRequestDTO request) {
+        Map<Long, Integer> selectedQuantities = new LinkedHashMap<>();
+        if (request == null || request.getItems() == null) {
+            return selectedQuantities;
+        }
+
+        for (ReservationItemRequestDTO item : request.getItems()) {
+            if (item != null && item.getBookId() != null && item.getQuantity() != null && item.getQuantity() > 0) {
+                selectedQuantities.put(item.getBookId(), item.getQuantity());
+            }
+        }
+        return selectedQuantities;
+    }
+
     private ReservationRequestDTO createInitialRequest(Long selectedBookId) {
         ReservationRequestDTO request = new ReservationRequestDTO();
         if (selectedBookId == null) {
@@ -117,29 +155,5 @@ public class ReaderReservationController {
         item.setQuantity(1);
         request.getItems().add(item);
         return request;
-    }
-
-    private void loadBookList(Model model, ReservationRequestDTO request) {
-        model.addAttribute("books", getActiveBooks());
-        model.addAttribute("reservationRequest", request);
-        model.addAttribute("selectedQuantities", getSelectedQuantities(request));
-    }
-
-    private List<Book> getActiveBooks() {
-        return bookRepository.findAllByStatusOrderByTitleAsc(BookStatus.ACTIVE);
-    }
-
-    private Map<Long, Integer> getSelectedQuantities(ReservationRequestDTO request) {
-        Map<Long, Integer> selectedQuantities = new LinkedHashMap<>();
-        if (request == null || request.getItems() == null) {
-            return selectedQuantities;
-        }
-
-        for (ReservationItemRequestDTO item : request.getItems()) {
-            if (item != null && item.getBookId() != null && item.getQuantity() != null && item.getQuantity() > 0) {
-                selectedQuantities.put(item.getBookId(), item.getQuantity());
-            }
-        }
-        return selectedQuantities;
     }
 }

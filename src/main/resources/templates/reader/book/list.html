@@ -5,78 +5,380 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Danh sách sách</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f4f7fb; }
+        .book-card { border: 0; border-radius: 16px; overflow: hidden; transition: .2s ease; }
+        .book-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(31,45,61,.12) !important; }
+        .cover { height: 260px; object-fit: cover; background: #e9ecef; }
+        .cover-empty { height: 260px; display: grid; place-items: center; background: #e9ecef; color: #6c757d; }
+        .reservation-sticky {
+            position: fixed;
+            top: 82px;
+            right: 24px;
+            z-index: 1020;
+            width: 360px;
+            max-height: calc(100vh - 106px);
+            overflow-y: auto;
+            background: rgba(255,255,255,.98);
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+        }
+        .reservation-sticky > .container { width: 100%; max-width: none; padding: 0 18px; }
+        .cart-header { flex-direction: column; align-items: stretch !important; }
+        .cart-panel { display: block; border-top: 1px solid #dee2e6; }
+        .book-content { width: 100%; max-width: none; padding-left: 32px; padding-right: 416px; }
+        #toggleCartButton { display: none; }
+        #cartItems { max-height: 45vh; overflow-y: auto; }
+        #createReservationButton { width: 100%; }
+        .cart-item { border-bottom: 1px solid #eef1f4; }
+        .cart-item:last-child { border-bottom: 0; }
+        .cart-quantity { width: 90px; }
+        .cart-count { min-width: 26px; display: inline-block; }
+        @media (max-width: 991.98px) {
+            .reservation-sticky {
+                position: sticky;
+                top: 0;
+                right: auto;
+                width: 100%;
+                max-height: none;
+                overflow: visible;
+                border: 0;
+                border-radius: 0;
+            }
+            .reservation-sticky > .container { max-width: 960px; }
+            .cart-header { flex-direction: row; align-items: center !important; }
+            .cart-panel { display: none; }
+            .cart-panel.show { display: block; }
+            .book-content { max-width: 960px; padding-left: 12px; padding-right: 12px; }
+            #toggleCartButton { display: inline-block; }
+            #cartItems { max-height: 40vh; }
+            #createReservationButton { width: auto; }
+        }
+    </style>
 </head>
-<body class="p-5">
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Danh sách sách</h2>
-    <a class="btn btn-outline-secondary" th:href="@{/homepage}">Về trang chủ</a>
-</div>
+<body>
+<nav class="navbar navbar-dark bg-primary shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" th:href="@{/homepage}">Online Library</a>
+        <a class="btn btn-light btn-sm" th:href="@{/reader/reservations}">Reservation của tôi</a>
+    </div>
+</nav>
 
-<div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+<section class="reservation-sticky shadow-sm">
+    <div class="container">
+        <div class="cart-header d-flex justify-content-between align-items-center gap-3 py-3">
+            <div>
+                <strong>Reservation đang chọn</strong>
+                <span class="text-muted ms-2">
+                    <span id="cartBookCount">0</span> đầu sách ·
+                    <span id="cartCopyCount">0</span> bản
+                </span>
+            </div>
+            <button id="toggleCartButton" class="btn btn-primary" type="button">
+                Xem sách đã chọn
+                <span id="cartBadge" class="badge bg-light text-primary cart-count ms-1">0</span>
+            </button>
+        </div>
 
-<form class="row g-3 align-items-end mb-4" method="get" th:action="@{/reader/books}">
-    <div class="col-md-4">
-        <label class="form-label" for="title">Tên sách</label>
-        <input class="form-control" id="title" name="title" type="text" th:value="${title}">
+        <div id="cartPanel" class="cart-panel pb-3" th:classappend="${error != null} ? 'show' : ''">
+            <form id="reservationForm"
+                  th:action="@{/reader/reservations(page=${bookPage.number}, title=${title}, author=${author}, categoryId=${categoryId})}"
+                  th:object="${reservationRequest}"
+                  method="post">
+                <div class="alert alert-danger mb-3" th:if="${error}" th:text="${error}"></div>
+                <div id="emptyCartMessage" class="text-center text-muted py-4">
+                    Bạn chưa chọn sách. Hãy bấm “Thêm vào reservation” ở bên dưới.
+                </div>
+                <div id="cartItems" class="bg-white rounded-3"></div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
+                    <small class="text-muted">Sách được giữ tối đa 2 giờ trước khi bạn gửi Librarian phê duyệt.</small>
+                    <button id="createReservationButton" class="btn btn-success px-4" type="submit" disabled>
+                        Tạo reservation
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="col-md-3">
-        <label class="form-label" for="author">Tác giả</label>
-        <input class="form-control" id="author" name="author" type="text" th:value="${author}">
+</section>
+
+<main class="container book-content py-5">
+    <div class="mb-4">
+        <h1 class="h3 mb-1">Khám phá sách</h1>
+        <p class="text-muted mb-0">Thêm các sách bạn muốn đặt trước, sau đó tạo một reservation chung.</p>
     </div>
-    <div class="col-md-3">
-        <label class="form-label" for="categoryId">Thể loại</label>
-        <select class="form-select" id="categoryId" name="categoryId">
-            <option value="">Tất cả thể loại</option>
-            <option th:each="category : ${allCategories}" th:value="${category.categoryId}" th:selected="${categoryId != null and category.categoryId == categoryId}" th:text="${category.categoryName}">Thể loại</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <button class="btn btn-primary" type="submit">Tìm</button>
-        <a class="btn btn-outline-secondary" th:href="@{/reader/books}">Xóa</a>
-    </div>
-</form>
+
+    <form class="row g-3 align-items-end bg-white rounded-3 shadow-sm p-3 mb-4"
+          method="get" th:action="@{/reader/books}">
+        <div class="col-md-4">
+            <label class="form-label" for="title">Tên sách</label>
+            <input class="form-control" id="title" name="title" type="text" th:value="${title}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="author">Tác giả</label>
+            <input class="form-control" id="author" name="author" type="text" th:value="${author}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="categoryId">Thể loại</label>
+            <select class="form-select" id="categoryId" name="categoryId">
+                <option value="">Tất cả thể loại</option>
+                <option th:each="category : ${allCategories}">Thể loại</option>
+                        th:value="${category.categoryId}"
+                        th:selected="${categoryId != null and category.categoryId == categoryId}"
+                        th:text="${category.categoryName}"
+
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Tìm</button>
+            <a class="btn btn-outline-secondary" th:href="@{/reader/books}">Xóa</a>
+        </div>
+    </form>
 
 <div class="alert alert-info" th:if="${bookPage.isEmpty()}" th:text="${hasFilters} ? 'Không tìm thấy sách phù hợp.' : 'Hiện chưa có sách đang hoạt động.'"></div>
+    <div class="row g-4">
+        <div class="col-sm-6 col-xl-4" th:each="book : ${bookPage.content}">
+            <div class="card book-card shadow-sm h-100"
+                 th:attr="data-book-id=${book.bookId},
+                          data-book-title=${book.title},
+                          data-available=${book.availableCopies},
+                          data-initial-quantity=${selectedQuantities[book.bookId]}">
+                <img th:if="${book.coverImg != null}" class="cover card-img-top"
+                     th:src="@{${book.coverImg}}" th:alt="${book.title}">
+                <div th:if="${book.coverImg == null}" class="cover-empty">Chưa có ảnh bìa</div>
 
-<table class="table table-bordered align-middle" th:if="${!bookPage.isEmpty()}">
-    <thead>
-    <tr>
-        <th>Tên sách</th>
-        <th>Tác giả</th>
-        <th>Thể loại</th>
-        <th>Số lượng</th>
-        <th></th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="book : ${bookPage.content}">
-        <td th:text="${book.title}">Tên sách</td>
-        <td>
-            <span th:each="authorName,it : ${book.authorNames}" th:text="${authorName + (it.last ? '' : ', ')}"></span>
-            <span th:if="${book.authorNames == null or book.authorNames.isEmpty()}">Chưa có tác giả</span>
-        </td>
-        <td>
-            <span th:each="categoryName,it : ${book.categoryNames}" th:text="${categoryName + (it.last ? '' : ', ')}"></span>
-            <span th:if="${book.categoryNames == null or book.categoryNames.isEmpty()}">Chưa có thể loại</span>
-        </td>
-        <td>
-            <span th:text="${book.availableCopies + '/' + book.totalCopies}">0/0</span>
-            <span class="badge bg-success" th:if="${book.availableCopies != null and book.availableCopies > 0}">Còn</span>
-            <span class="badge bg-secondary" th:if="${book.availableCopies == null or book.availableCopies <= 0}">Hết</span>
-        </td>
-        <td><a class="btn btn-sm btn-primary" th:href="@{/reader/books/{id}(id=${book.bookId})}">Chi tiết</a></td>
-    </tr>
-    </tbody>
-</table>
+                <div class="card-body d-flex flex-column">
+                    <h2 class="h5 card-title" th:text="${book.title}">Tên sách</h2>
+                    <p class="small text-muted text-truncate" th:text="${book.description}">Mô tả</p>
 
-<nav class="mt-4" th:if="${bookPage.totalPages > 1}">
-    <ul class="pagination justify-content-center">
-        <li class="page-item" th:classappend="${bookPage.first} ? 'disabled'"><a class="page-link" th:href="@{/reader/books(page=${bookPage.number - 1}, title=${title}, author=${author}, categoryId=${categoryId})}">Trước</a></li>
-        <li class="page-item" th:each="pageNumber : ${#numbers.sequence(0, bookPage.totalPages - 1)}" th:classappend="${pageNumber == bookPage.number} ? 'active'">
-            <a class="page-link" th:href="@{/reader/books(page=${pageNumber}, title=${title}, author=${author}, categoryId=${categoryId})}" th:text="${pageNumber + 1}">1</a>
-        </li>
-        <li class="page-item" th:classappend="${bookPage.last} ? 'disabled'"><a class="page-link" th:href="@{/reader/books(page=${bookPage.number + 1}, title=${title}, author=${author}, categoryId=${categoryId})}">Sau</a></li>
-    </ul>
-</nav>
+                    <div class="mt-auto">
+                        <span class="badge bg-success mb-3" th:if="${book.availableCopies != null
+                              and book.availableCopies > 0}"
+                              th:text="|Còn ${book.availableCopies}/${book.totalCopies}|">Còn sách</span>
+                        <span class="badge bg-secondary mb-3" th:if="${book.availableCopies == null
+                              or book.availableCopies <= 0}">Đã hết sách</span>
+
+                        <button class="btn btn-outline-primary w-100 add-to-cart" type="button"
+                                th:if="${book.availableCopies != null and book.availableCopies > 0}">
+                            Thêm vào reservation
+                        </button>
+                        <button class="btn btn-outline-secondary w-100" type="button" disabled
+                                th:if="${book.availableCopies == null or book.availableCopies <= 0}">
+                            Tạm hết
+                        </button>
+                        <a class="btn btn-link w-100 mt-2"
+                           th:href="@{/reader/books/{id}(id=${book.bookId})}">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info text-center" th:if="${bookPage.isEmpty()}"
+         th:text="${hasFilters} ? 'Không tìm thấy sách phù hợp.' : 'Hiện chưa có sách nào đang hoạt động.'">
+        Hiện chưa có sách nào đang hoạt động.
+    </div>
+
+    <nav class="mt-4" th:if="${bookPage.totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${bookPage.first} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/reader/books(page=${bookPage.number - 1}, title=${title}, author=${author}, categoryId=${categoryId})}">Trước</a>
+            </li>
+            <li class="page-item"
+                th:each="pageNumber : ${#numbers.sequence(0, bookPage.totalPages - 1)}"
+                th:classappend="${pageNumber == bookPage.number} ? 'active'">
+                <a class="page-link"
+                   th:href="@{/reader/books(page=${pageNumber}, title=${title}, author=${author}, categoryId=${categoryId})}"
+                   th:text="${pageNumber + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${bookPage.last} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/reader/books(page=${bookPage.number + 1}, title=${title}, author=${author}, categoryId=${categoryId})}">Sau</a>
+            </li>
+        </ul>
+    </nav>
+</main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var cart = {};
+        var cartPanel = document.getElementById("cartPanel");
+        var cartItems = document.getElementById("cartItems");
+        var emptyCartMessage = document.getElementById("emptyCartMessage");
+        var createButton = document.getElementById("createReservationButton");
+        var toggleButton = document.getElementById("toggleCartButton");
+        var cartBookCount = document.getElementById("cartBookCount");
+        var cartCopyCount = document.getElementById("cartCopyCount");
+        var cartBadge = document.getElementById("cartBadge");
+        var bookCards = document.querySelectorAll(".book-card[data-book-id]");
+
+        function initializeCart() {
+            for (var index = 0; index < bookCards.length; index++) {
+                var card = bookCards[index];
+                var initialQuantity = Number(card.getAttribute("data-initial-quantity"));
+                if (initialQuantity > 0) {
+                    addBookFromCard(card, initialQuantity);
+                }
+            }
+            renderCart();
+        }
+
+        function addBookFromCard(card, quantity) {
+            var bookId = card.getAttribute("data-book-id");
+            var available = Number(card.getAttribute("data-available"));
+            var safeQuantity = Math.min(quantity, available);
+            if (safeQuantity <= 0) {
+                return;
+            }
+
+            cart[bookId] = {
+                bookId: bookId,
+                title: card.getAttribute("data-book-title"),
+                available: available,
+                quantity: safeQuantity,
+                card: card
+            };
+        }
+
+        function addOneBook(card) {
+            var bookId = card.getAttribute("data-book-id");
+            if (cart[bookId] == null) {
+                addBookFromCard(card, 1);
+            } else if (cart[bookId].quantity < cart[bookId].available) {
+                cart[bookId].quantity++;
+            } else {
+                alert("Bạn đã chọn tối đa số bản đang có.");
+            }
+            cartPanel.classList.add("show");
+            renderCart();
+        }
+
+        function removeBook(bookId) {
+            delete cart[bookId];
+            renderCart();
+        }
+
+        function changeQuantity(bookId, value) {
+            var quantity = Number(value);
+            if (quantity < 1) {
+                quantity = 1;
+            }
+            if (quantity > cart[bookId].available) {
+                quantity = cart[bookId].available;
+            }
+            cart[bookId].quantity = quantity;
+            renderCart();
+        }
+
+        function createCartItem(book, index) {
+            var row = document.createElement("div");
+            row.className = "cart-item d-flex flex-wrap justify-content-between align-items-center gap-3 p-3";
+
+            var bookInfo = document.createElement("div");
+            var title = document.createElement("strong");
+            title.textContent = book.title;
+            var available = document.createElement("div");
+            available.className = "small text-muted";
+            available.textContent = "Có sẵn: " + book.available + " bản";
+            bookInfo.appendChild(title);
+            bookInfo.appendChild(available);
+
+            var controls = document.createElement("div");
+            controls.className = "d-flex align-items-center gap-2";
+
+            var quantityInput = document.createElement("input");
+            quantityInput.type = "number";
+            quantityInput.className = "form-control cart-quantity";
+            quantityInput.min = "1";
+            quantityInput.max = String(book.available);
+            quantityInput.value = String(book.quantity);
+            quantityInput.setAttribute("aria-label", "Số lượng " + book.title);
+            quantityInput.addEventListener("change", function () {
+                changeQuantity(book.bookId, quantityInput.value);
+            });
+
+            var removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.className = "btn btn-sm btn-outline-danger";
+            removeButton.textContent = "Xóa";
+            removeButton.addEventListener("click", function () {
+                removeBook(book.bookId);
+            });
+
+            var bookIdInput = document.createElement("input");
+            bookIdInput.type = "hidden";
+            bookIdInput.name = "items[" + index + "].bookId";
+            bookIdInput.value = book.bookId;
+
+            var quantityHiddenInput = document.createElement("input");
+            quantityHiddenInput.type = "hidden";
+            quantityHiddenInput.name = "items[" + index + "].quantity";
+            quantityHiddenInput.value = String(book.quantity);
+
+            controls.appendChild(quantityInput);
+            controls.appendChild(removeButton);
+            controls.appendChild(bookIdInput);
+            controls.appendChild(quantityHiddenInput);
+            row.appendChild(bookInfo);
+            row.appendChild(controls);
+            return row;
+        }
+
+        function updateCardButtons() {
+            for (var index = 0; index < bookCards.length; index++) {
+                var card = bookCards[index];
+                var button = card.querySelector(".add-to-cart");
+                if (button == null) {
+                    continue;
+                }
+
+                var selectedBook = cart[card.getAttribute("data-book-id")];
+                if (selectedBook == null) {
+                    button.textContent = "Thêm vào reservation";
+                    button.classList.remove("btn-primary");
+                    button.classList.add("btn-outline-primary");
+                } else {
+                    button.textContent = "Đã chọn " + selectedBook.quantity + " · Thêm 1";
+                    button.classList.remove("btn-outline-primary");
+                    button.classList.add("btn-primary");
+                }
+            }
+        }
+
+        function renderCart() {
+            cartItems.innerHTML = "";
+            var bookIds = Object.keys(cart);
+            var totalCopies = 0;
+
+            for (var index = 0; index < bookIds.length; index++) {
+                var book = cart[bookIds[index]];
+                totalCopies += book.quantity;
+                cartItems.appendChild(createCartItem(book, index));
+            }
+
+            cartBookCount.textContent = String(bookIds.length);
+            cartCopyCount.textContent = String(totalCopies);
+            cartBadge.textContent = String(bookIds.length);
+            emptyCartMessage.style.display = bookIds.length === 0 ? "block" : "none";
+            createButton.disabled = bookIds.length === 0;
+            updateCardButtons();
+        }
+
+        for (var index = 0; index < bookCards.length; index++) {
+            var addButton = bookCards[index].querySelector(".add-to-cart");
+            if (addButton != null) {
+                addButton.addEventListener("click", function (event) {
+                    addOneBook(event.currentTarget.closest(".book-card"));
+                });
+            }
+        }
+
+        toggleButton.addEventListener("click", function () {
+            cartPanel.classList.toggle("show");
+        });
+
+        initializeCart();
+    });
+</script>
 </body>
 </html>
