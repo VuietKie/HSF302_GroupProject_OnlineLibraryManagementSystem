@@ -1,17 +1,24 @@
 package com.he194346.mvc.online_library_management_system.service.impl;
 
 import com.he194346.mvc.online_library_management_system.dto.book.BookRequestDTO;
+import com.he194346.mvc.online_library_management_system.dto.book.ReaderBookResponseDTO;
 import com.he194346.mvc.online_library_management_system.entity.Author;
 import com.he194346.mvc.online_library_management_system.entity.Book;
 import com.he194346.mvc.online_library_management_system.entity.Category;
+import com.he194346.mvc.online_library_management_system.enums.BookStatus;
 import com.he194346.mvc.online_library_management_system.enums.ErrorCode;
 import com.he194346.mvc.online_library_management_system.exception.CustomException;
+import com.he194346.mvc.online_library_management_system.mapper.BookMapper;
 import com.he194346.mvc.online_library_management_system.repository.AuthorRepository;
 import com.he194346.mvc.online_library_management_system.repository.BookRepository;
 import com.he194346.mvc.online_library_management_system.repository.CategoryRepository;
 import com.he194346.mvc.online_library_management_system.service.BookService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
