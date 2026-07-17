@@ -8,6 +8,7 @@
     <style>
         body { background-color: #f4f7fb; }
         .content-card { border: 0; border-radius: 16px; }
+        .action-cell { min-width: 180px; }
     </style>
 </head>
 <body>
@@ -20,6 +21,9 @@
         </div>
     </div>
 
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
     <div class="card content-card shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -30,6 +34,7 @@
                     <th>Sách yêu cầu</th>
                     <th>Thời gian gửi</th>
                     <th>Trạng thái</th>
+                    <th class="text-end">Thao tác</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -51,9 +56,22 @@
                         <span class="text-muted" th:if="${reservation.submittedAt == null}">Chưa ghi nhận</span>
                     </td>
                     <td><span class="badge bg-info text-dark">WAITING_FOR_APPROVAL</span></td>
+                    <td class="text-end action-cell">
+                        <div class="d-flex justify-content-end gap-2">
+                            <form method="post"
+                                  th:action="@{/librarian/reservations/{id}/approve(id=${reservation.reservationId})}">
+                                <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                            </form>
+                            <form method="post"
+                                  th:action="@{/librarian/reservations/{id}/reject(id=${reservation.reservationId})}"
+                                  onsubmit="return confirm('Reject reservation này?');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(reservations)}">
-                    <td colspan="5" class="text-center text-muted py-5">
+                    <td colspan="6" class="text-center text-muted py-5">
                         Hiện không có reservation nào đang chờ phê duyệt.
                     </td>
                 </tr>

@@ -3,15 +3,19 @@ package com.he194346.mvc.online_library_management_system.service.impl;
 import com.he194346.mvc.online_library_management_system.dto.reservation.ReservationItemRequestDTO;
 import com.he194346.mvc.online_library_management_system.dto.reservation.ReservationRequestDTO;
 import com.he194346.mvc.online_library_management_system.entity.Book;
+import com.he194346.mvc.online_library_management_system.entity.BookBorrowRecord;
+import com.he194346.mvc.online_library_management_system.entity.BookCopy;
 import com.he194346.mvc.online_library_management_system.entity.BookReservation;
+import com.he194346.mvc.online_library_management_system.entity.BorrowRecord;
 import com.he194346.mvc.online_library_management_system.entity.Reservation;
 import com.he194346.mvc.online_library_management_system.entity.User;
-import com.he194346.mvc.online_library_management_system.enums.BookStatus;
-import com.he194346.mvc.online_library_management_system.enums.ErrorCode;
-import com.he194346.mvc.online_library_management_system.enums.ReservationStatus;
+import com.he194346.mvc.online_library_management_system.enums.*;
 import com.he194346.mvc.online_library_management_system.exception.CustomException;
 import com.he194346.mvc.online_library_management_system.repository.BookRepository;
+import com.he194346.mvc.online_library_management_system.repository.BookCopyRepository;
 import com.he194346.mvc.online_library_management_system.repository.BookReservationRepository;
+import com.he194346.mvc.online_library_management_system.repository.BorrowRecordRepository;
+import com.he194346.mvc.online_library_management_system.repository.BookBorrowRecordRepository;
 import com.he194346.mvc.online_library_management_system.repository.ReservationRepository;
 import com.he194346.mvc.online_library_management_system.repository.UserRepository;
 import com.he194346.mvc.online_library_management_system.service.ReservationService;
@@ -32,10 +36,14 @@ import java.util.Optional;
 public class ReservationServiceImpl implements ReservationService {
 
     private static final long HOLDING_HOURS = 2;
+    private static final long BORROW_DAYS = 14;
 
     private final ReservationRepository reservationRepository;
     private final BookReservationRepository bookReservationRepository;
     private final BookRepository bookRepository;
+    private final BookCopyRepository bookCopyRepository;
+    private final BorrowRecordRepository borrowRecordRepository;
+    private final BookBorrowRecordRepository bookBorrowRecordRepository;
     private final UserRepository userRepository;
 
     @Override
@@ -106,6 +114,44 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
+    public Long approveReservation(Long reservationId, String librarianEmail) {
+        Reservation reservation = findReservationForLibrarianUpdate(reservationId);
+        validateWaitingForApprovalStatus(reservation);
+        validateReservationContainsBooks(reservation);
+
+        User librarian = findLibrarian(librarianEmail);
+        BorrowRecord borrowRecord = createBorrowRecord(reservation, librarian);
+        borrowRecord = borrowRecordRepository.save(borrowRecord);
+
+        findAndLockBooks(getReservationBookIds(reservation));
+        List<BookBorrowRecord> bookBorrowRecords = createBookBorrowRecords(borrowRecord, reservation);
+        bookBorrowRecordRepository.saveAll(bookBorrowRecords);
+
+        reservation.setStatus(ReservationStatus.APPROVED);
+        reservationRepository.save(reservation);
+
+        return borrowRecord.getBorrowRecordId();
+    }
+
+    @Override
+    @Transactional
+    public void rejectReservation(Long reservationId, String librarianEmail) {
+        Reservation reservation = findReservationForLibrarianUpdate(reservationId);
+        validateWaitingForApprovalStatus(reservation);
+        validateReservationContainsBooks(reservation);
+        findLibrarian(librarianEmail);
+
+        List<Long> bookIds = getReservationBookIds(reservation);
+        Map<Long, Book> lockedBooks = findAndLockBooks(bookIds);
+        restoreAvailableCopies(reservation, lockedBooks);
+
+        reservation.setStatus(ReservationStatus.REJECTED);
+        bookRepository.saveAll(lockedBooks.values());
+        reservationRepository.save(reservation);
+    }
+
+    @Override
+    @Transactional
     public void expireOverdueHoldings() {
         LocalDateTime now = LocalDateTime.now();
 
@@ -124,6 +170,14 @@ public class ReservationServiceImpl implements ReservationService {
             throw new CustomException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy người đọc");
         }
         return reader;
+    }
+
+    private User findLibrarian(String librarianEmail) {
+        User librarian = userRepository.findByEmail(librarianEmail);
+        if (librarian == null) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy thủ thư");
+        }
+        return librarian;
     }
 
     private void validateReservationHasBooks(Map<Long, Integer> requestedQuantities) {
@@ -217,6 +271,93 @@ public class ReservationServiceImpl implements ReservationService {
         bookReservationRepository.saveAll(reservation.getBooks());
     }
 
+    private BorrowRecord createBorrowRecord(Reservation reservation, User librarian) {
+        LocalDateTime borrowDate = LocalDateTime.now();
+
+        BorrowRecord borrowRecord = new BorrowRecord();
+        borrowRecord.setReader(reservation.getReader());
+        borrowRecord.setLibrarian(librarian);
+        borrowRecord.setReservation(reservation);
+        borrowRecord.setRequestDate(getRequestDate(reservation));
+        borrowRecord.setBorrowDate(borrowDate);
+        borrowRecord.setDueDate(borrowDate.plusDays(BORROW_DAYS));
+        borrowRecord.setFineAmount(0.0);
+        borrowRecord.setFineStatus(FineStatus.PAID);
+        borrowRecord.setStatus(BorrowStatus.BORROWED);
+        return borrowRecord;
+    }
+
+    private LocalDateTime getRequestDate(Reservation reservation) {
+        if (reservation.getSubmittedAt() != null) {
+            return reservation.getSubmittedAt();
+        }
+        return reservation.getReservedAt();
+    }
+
+    private List<BookBorrowRecord> createBookBorrowRecords(BorrowRecord borrowRecord, Reservation reservation) {
+        List<BookBorrowRecord> bookBorrowRecords = new ArrayList<>();
+        List<BookCopy> borrowedCopies = new ArrayList<>();
+
+        for (BookReservation bookReservation : reservation.getBooks()) {
+            Book book = bookReservation.getBook();
+            int quantity = bookReservation.getQuantity();
+
+            ensureBookCopyRowsExist(book);
+            List<BookCopy> availableCopies = bookCopyRepository.findAllByBookIdAndStatusForUpdate(
+                    book.getBookId(), BookCopyStatus.AVAILABLE);
+
+            if (availableCopies.size() < quantity) {
+                String message = "Sách \"" + book.getTitle() + "\" không đủ bản sách khả dụng để duyệt";
+                throw new CustomException(ErrorCode.INSUFFICIENT_BOOK_COPIES, message);
+            }
+
+            for (int index = 0; index < quantity; index++) {
+                BookCopy bookCopy = availableCopies.get(index);
+                bookCopy.setStatus(BookCopyStatus.BORROWED);
+                borrowedCopies.add(bookCopy);
+                bookBorrowRecords.add(createBookBorrowRecord(borrowRecord, bookCopy));
+            }
+        }
+
+        bookCopyRepository.saveAll(borrowedCopies);
+        return bookBorrowRecords;
+    }
+
+    private void ensureBookCopyRowsExist(Book book) {
+        int totalCopies = getTotalCopies(book);
+        long existingCopies = bookCopyRepository.countByBookBookId(book.getBookId());
+
+        if (existingCopies >= totalCopies) {
+            return;
+        }
+
+        List<BookCopy> missingCopies = new ArrayList<>();
+        for (long copyNumber = existingCopies + 1; copyNumber <= totalCopies; copyNumber++) {
+            BookCopy bookCopy = new BookCopy();
+            bookCopy.setBook(book);
+            bookCopy.setBarCode("BOOK-" + book.getBookId() + "-" + copyNumber);
+            bookCopy.setCreatedAt(LocalDateTime.now());
+            bookCopy.setStatus(BookCopyStatus.AVAILABLE);
+            missingCopies.add(bookCopy);
+        }
+        bookCopyRepository.saveAll(missingCopies);
+    }
+
+    private int getTotalCopies(Book book) {
+        if (book.getTotalCopies() == null || book.getTotalCopies() < 0) {
+            return 0;
+        }
+        return book.getTotalCopies();
+    }
+
+    private BookBorrowRecord createBookBorrowRecord(BorrowRecord borrowRecord, BookCopy bookCopy) {
+        BookBorrowRecord bookBorrowRecord = new BookBorrowRecord();
+        bookBorrowRecord.setBorrowRecord(borrowRecord);
+        bookBorrowRecord.setBookCopy(bookCopy);
+        borrowRecord.getBooks().add(bookBorrowRecord);
+        return bookBorrowRecord;
+    }
+
     private Map<Long, Integer> normalizeItems(ReservationRequestDTO request) {
         Map<Long, Integer> quantities = new LinkedHashMap<>();
         if (request == null || request.getItems() == null) {
@@ -248,6 +389,14 @@ public class ReservationServiceImpl implements ReservationService {
         quantities.put(bookId, (int) totalQuantity);
     }
 
+    private Reservation findReservationForLibrarianUpdate(Long reservationId) {
+        Optional<Reservation> result = reservationRepository.findByIdForLibrarianUpdate(reservationId);
+        if (result.isEmpty()) {
+            throw new CustomException(ErrorCode.RESERVATION_NOT_FOUND, "Không tìm thấy reservation");
+        }
+        return result.get();
+    }
+
     private Reservation findOwnedReservationForUpdate(Long reservationId, String readerEmail) {
         Optional<Reservation> result = reservationRepository.findOwnedForUpdate(reservationId, readerEmail);
         if (result.isEmpty()) {
@@ -260,6 +409,19 @@ public class ReservationServiceImpl implements ReservationService {
         if (reservation.getStatus() != ReservationStatus.HOLDING) {
             throw new CustomException(
                     ErrorCode.INVALID_RESERVATION, "Chỉ reservation đang HOLDING mới có thể gửi duyệt");
+        }
+    }
+
+    private void validateWaitingForApprovalStatus(Reservation reservation) {
+        if (reservation.getStatus() != ReservationStatus.WAITING_FOR_APPROVAL) {
+            throw new CustomException(
+                    ErrorCode.INVALID_RESERVATION, "Chỉ reservation đang chờ phê duyệt mới có thể xử lý");
+        }
+    }
+
+    private void validateReservationContainsBooks(Reservation reservation) {
+        if (reservation.getBooks() == null || reservation.getBooks().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_RESERVATION, "Reservation không có sách để xử lý");
         }
     }
 

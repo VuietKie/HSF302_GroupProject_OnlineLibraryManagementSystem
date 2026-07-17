@@ -3,8 +3,15 @@ package com.he194346.mvc.online_library_management_system.repository;
 import com.he194346.mvc.online_library_management_system.entity.Book;
 import com.he194346.mvc.online_library_management_system.enums.BookStatus;
 import jakarta.persistence.LockModeType;
+import com.he194346.mvc.online_library_management_system.enums.BookStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
