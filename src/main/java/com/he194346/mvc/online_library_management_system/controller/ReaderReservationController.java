@@ -2,10 +2,7 @@ package com.he194346.mvc.online_library_management_system.controller;
 
 import com.he194346.mvc.online_library_management_system.dto.reservation.ReservationItemRequestDTO;
 import com.he194346.mvc.online_library_management_system.dto.reservation.ReservationRequestDTO;
-import com.he194346.mvc.online_library_management_system.entity.Book;
-import com.he194346.mvc.online_library_management_system.enums.BookStatus;
 import com.he194346.mvc.online_library_management_system.exception.CustomException;
-import com.he194346.mvc.online_library_management_system.repository.BookRepository;
 import com.he194346.mvc.online_library_management_system.service.BookService;
 import com.he194346.mvc.online_library_management_system.service.CategoryService;
 import com.he194346.mvc.online_library_management_system.service.ReservationService;
@@ -24,9 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/reader")
@@ -36,13 +31,6 @@ public class ReaderReservationController {
     private final BookService bookService;
     private final CategoryService categoryService;
     private final ReservationService reservationService;
-
-    @GetMapping("/books")
-    public String viewBooks(@RequestParam(required = false) Long bookId, Model model) {
-        ReservationRequestDTO request = createInitialRequest(bookId);
-        loadBookList(model, request);
-        return "reader/book-list";
-    }
 
     @GetMapping("/reservations/new")
     public String reservationForm(@RequestParam(required = false) Long bookId) {
@@ -115,10 +103,6 @@ public class ReaderReservationController {
         model.addAttribute("selectedQuantities", getSelectedQuantities(request));
     }
 
-    private List<Book> getActiveBooks() {
-        return bookRepository.findAllByStatusOrderByTitleAsc(BookStatus.ACTIVE);
-    }
-
     private Map<Long, Integer> getSelectedQuantities(ReservationRequestDTO request) {
         Map<Long, Integer> selectedQuantities = new LinkedHashMap<>();
         if (request == null || request.getItems() == null) {
@@ -131,29 +115,5 @@ public class ReaderReservationController {
             }
         }
         return selectedQuantities;
-    }
-
-    private ReservationRequestDTO createInitialRequest(Long selectedBookId) {
-        ReservationRequestDTO request = new ReservationRequestDTO();
-        if (selectedBookId == null) {
-            return request;
-        }
-
-        Optional<Book> result = bookRepository.findById(selectedBookId);
-        if (result.isEmpty()) {
-            return request;
-        }
-
-        Book book = result.get();
-        if (book.getStatus() != BookStatus.ACTIVE || book.getAvailableCopies() == null
-                || book.getAvailableCopies() <= 0) {
-            return request;
-        }
-
-        ReservationItemRequestDTO item = new ReservationItemRequestDTO();
-        item.setBookId(book.getBookId());
-        item.setQuantity(1);
-        request.getItems().add(item);
-        return request;
     }
 }
