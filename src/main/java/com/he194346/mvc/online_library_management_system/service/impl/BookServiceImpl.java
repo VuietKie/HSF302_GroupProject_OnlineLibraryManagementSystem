@@ -81,14 +81,24 @@ public class BookServiceImpl implements BookService {
     @Override
     public void create(BookRequestDTO bookRequestDTO) {
         Book book = new Book();
-        applyData(book, bookRequestDTO);
+        applyData(book,bookRequestDTO);
+        book.setAvailableCopies(bookRequestDTO.getTotalCopies());
         bookRepository.save(book);
     }
 
     @Override
     public void update(Long id, BookRequestDTO bookRequestDTO) {
         Book book = findById(id);
-        applyData(book, bookRequestDTO);
+        int oldTotal = book.getTotalCopies() == null ? 0 : book.getTotalCopies();
+        int oldAvailable = book.getAvailableCopies() == null ? 0 : book.getAvailableCopies();
+        int unavailableCopies = Math.max(0, oldTotal - oldAvailable);
+        if (bookRequestDTO.getTotalCopies() < unavailableCopies) {
+            throw new CustomException(ErrorCode.INVALID_RESERVATION,
+                    "Tổng số bản không thể nhỏ hơn " + unavailableCopies
+                            + " bản đang được giữ hoặc đang mượn");
+        }
+        applyData(book,bookRequestDTO);
+        book.setAvailableCopies(bookRequestDTO.getTotalCopies() - unavailableCopies);
         bookRepository.save(book);
     }
 
@@ -103,7 +113,6 @@ public class BookServiceImpl implements BookService {
         book.setDescription(bookRequestDTO.getDescription());
         book.setStatus(bookRequestDTO.getStatus());
         book.setTotalCopies(bookRequestDTO.getTotalCopies());
-        book.setAvailableCopies(bookRequestDTO.getTotalCopies());// tạm: số sẵn= tổng(chưa quản BookCopy)
         if (bookRequestDTO.getCoverImg()!=null){
             book.setCoverImg(bookRequestDTO.getCoverImg());
         }

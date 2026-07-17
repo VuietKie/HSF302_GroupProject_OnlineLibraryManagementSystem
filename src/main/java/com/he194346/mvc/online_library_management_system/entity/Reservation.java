@@ -27,6 +27,8 @@ public class Reservation {
 
     private LocalDateTime expiredAt;
 
+    private LocalDateTime submittedAt;
+
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
