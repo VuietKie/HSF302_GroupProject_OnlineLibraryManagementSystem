@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Danh sách sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Danh sách sách</h2>
+    <a class="btn btn-outline-secondary" th:href="@{/homepage}">Về trang chủ</a>
+</div>
+
+<div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+<form class="row g-3 align-items-end mb-4" method="get" th:action="@{/reader/books}">
+    <div class="col-md-4">
+        <label class="form-label" for="title">Tên sách</label>
+        <input class="form-control" id="title" name="title" type="text" th:value="${title}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="author">Tác giả</label>
+        <input class="form-control" id="author" name="author" type="text" th:value="${author}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="categoryId">Thể loại</label>
+        <select class="form-select" id="categoryId" name="categoryId">
+            <option value="">Tất cả thể loại</option>
+            <option th:each="category : ${allCategories}" th:value="${category.categoryId}" th:selected="${categoryId != null and category.categoryId == categoryId}" th:text="${category.categoryName}">Thể loại</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary" type="submit">Tìm</button>
+        <a class="btn btn-outline-secondary" th:href="@{/reader/books}">Xóa</a>
+    </div>
+</form>
+
+<div class="alert alert-info" th:if="${bookPage.isEmpty()}" th:text="${hasFilters} ? 'Không tìm thấy sách phù hợp.' : 'Hiện chưa có sách đang hoạt động.'"></div>
+
+<table class="table table-bordered align-middle" th:if="${!bookPage.isEmpty()}">
+    <thead>
+    <tr>
+        <th>Tên sách</th>
+        <th>Tác giả</th>
+        <th>Thể loại</th>
+        <th>Số lượng</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="book : ${bookPage.content}">
+        <td th:text="${book.title}">Tên sách</td>
+        <td>
+            <span th:each="authorName,it : ${book.authorNames}" th:text="${authorName + (it.last ? '' : ', ')}"></span>
+            <span th:if="${book.authorNames == null or book.authorNames.isEmpty()}">Chưa có tác giả</span>
+        </td>
+        <td>
+            <span th:each="categoryName,it : ${book.categoryNames}" th:text="${categoryName + (it.last ? '' : ', ')}"></span>
+            <span th:if="${book.categoryNames == null or book.categoryNames.isEmpty()}">Chưa có thể loại</span>
+        </td>
+        <td>
+            <span th:text="${book.availableCopies + '/' + book.totalCopies}">0/0</span>
+            <span class="badge bg-success" th:if="${book.availableCopies != null and book.availableCopies > 0}">Còn</span>
+            <span class="badge bg-secondary" th:if="${book.availableCopies == null or book.availableCopies <= 0}">Hết</span>
+        </td>
+        <td><a class="btn btn-sm btn-primary" th:href="@{/reader/books/{id}(id=${book.bookId})}">Chi tiết</a></td>
+    </tr>
+    </tbody>
+</table>
+
+<nav class="mt-4" th:if="${bookPage.totalPages > 1}">
+    <ul class="pagination justify-content-center">
+        <li class="page-item" th:classappend="${bookPage.first} ? 'disabled'"><a class="page-link" th:href="@{/reader/books(page=${bookPage.number - 1}, title=${title}, author=${author}, categoryId=${categoryId})}">Trước</a></li>
+        <li class="page-item" th:each="pageNumber : ${#numbers.sequence(0, bookPage.totalPages - 1)}" th:classappend="${pageNumber == bookPage.number} ? 'active'">
+            <a class="page-link" th:href="@{/reader/books(page=${pageNumber}, title=${title}, author=${author}, categoryId=${categoryId})}" th:text="${pageNumber + 1}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${bookPage.last} ? 'disabled'"><a class="page-link" th:href="@{/reader/books(page=${bookPage.number + 1}, title=${title}, author=${author}, categoryId=${categoryId})}">Sau</a></li>
+    </ul>
+</nav>
+</body>
+</html>
