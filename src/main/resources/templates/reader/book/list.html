@@ -134,6 +134,7 @@
         </div>
     </form>
 
+<div class="alert alert-info" th:if="${bookPage.isEmpty()}" th:text="${hasFilters} ? 'Không tìm thấy sách phù hợp.' : 'Hiện chưa có sách đang hoạt động.'"></div>
     <div class="row g-4">
         <div class="col-sm-6 col-xl-4" th:each="book : ${bookPage.content}">
             <div class="card book-card shadow-sm h-100"
