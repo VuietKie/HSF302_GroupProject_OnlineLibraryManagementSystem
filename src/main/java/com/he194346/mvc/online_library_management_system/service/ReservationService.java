@@ -11,5 +11,7 @@ public interface ReservationService {
     List<Reservation> findByReader(String readerEmail);
     List<Reservation> findWaitingForApproval();
     void submitForApproval(Long reservationId, String readerEmail);
+    Long approveReservation(Long reservationId, String librarianEmail);
+    void rejectReservation(Long reservationId, String librarianEmail);
     void expireOverdueHoldings();
 }
