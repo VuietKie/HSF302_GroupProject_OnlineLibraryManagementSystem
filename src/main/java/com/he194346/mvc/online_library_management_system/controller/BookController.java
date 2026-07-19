@@ -102,6 +102,25 @@ public class BookController {
         return "redirect:/admin/books";
     }
 
+    // UC10: Approve New Books - Phê duyệt sách mới
+    @GetMapping("/pending")
+    public String pendingBooks(Model model) {
+        model.addAttribute("pendingBooks", bookService.getPendingBooks());
+        return "book/pending";
+    }
+
+    @PostMapping("/approve/{id}")
+    public String approveBook(@PathVariable Long id) {
+        bookService.approveBook(id);
+        return "redirect:/admin/books/pending";
+    }
+
+    @PostMapping("/reject/{id}")
+    public String rejectBook(@PathVariable Long id) {
+        bookService.rejectBook(id);
+        return "redirect:/admin/books/pending";
+    }
+
     //đổ sẵn danh sách tác giả + thể loại cho ô chọn nhiều
     private void loadOptions(Model model) {
         model.addAttribute("allAuthors", authorService.findAll());

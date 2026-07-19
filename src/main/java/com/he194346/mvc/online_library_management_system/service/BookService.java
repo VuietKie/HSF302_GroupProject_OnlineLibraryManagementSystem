@@ -16,4 +16,9 @@ public interface BookService {
     void create(BookRequestDTO bookRequestDTO);
     void update(Long id, BookRequestDTO bookRequestDTO);
     void delete(Long id);
+
+    // UC10: Approve New Books
+    List<Book> getPendingBooks();
+    void approveBook(Long id);
+    void rejectBook(Long id);
 }

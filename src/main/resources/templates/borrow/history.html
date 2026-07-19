@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lịch sử mượn sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Lịch sử mượn sách của tôi</h2>
+        <a class="btn btn-outline-secondary" th:href="@{/homepage}">← Quay lại trang chủ</a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(borrowHistory)}" class="alert alert-info">
+        Bạn chưa có lịch sử mượn sách nào.
+    </div>
+
+    <table th:if="${not #lists.isEmpty(borrowHistory)}" class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Sách đã mượn</th>
+                <th>Ngày yêu cầu</th>
+                <th>Ngày mượn</th>
+                <th>Hạn trả</th>
+                <th>Ngày trả</th>
+                <th>Trạng thái</th>
+                <th>Tiền phạt</th>
+                <th>TT phạt</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="record, rowStat : ${borrowHistory}">
+                <td th:text="${rowStat.count}"></td>
+                <td>
+                    <span th:if="${#sets.isEmpty(record.books)}">-</span>
+                    <span th:each="bookRecord, it : ${record.books}"
+                          th:text="${bookRecord.bookCopy != null and bookRecord.bookCopy.book != null ? bookRecord.bookCopy.book.title + (it.last ? '' : ', ') : ''}">
+                    </span>
+                </td>
+                <td th:text="${record.requestDate != null ? #temporals.format(record.requestDate, 'dd/MM/yyyy') : '-'}"></td>
+                <td th:text="${record.borrowDate != null ? #temporals.format(record.borrowDate, 'dd/MM/yyyy') : '-'}"></td>
+                <td th:text="${record.dueDate != null ? #temporals.format(record.dueDate, 'dd/MM/yyyy') : '-'}"></td>
+                <td th:text="${record.returnDate != null ? #temporals.format(record.returnDate, 'dd/MM/yyyy') : 'Chưa trả'}"></td>
+                <td>
+                    <span th:text="${record.status}"
+                          th:classappend="${record.status != null and record.status.name() == 'RETURNED'} ? 'badge bg-success' :
+                                         (${record.status != null and record.status.name() == 'OVERDUE'} ? 'badge bg-danger' : 'badge bg-warning text-dark')">
+                    </span>
+                </td>
+                <td th:text="${record.fineAmount != null ? record.fineAmount + ' VNĐ' : '0 VNĐ'}"></td>
+                <td th:text="${record.fineStatus != null ? record.fineStatus : '-'}"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
