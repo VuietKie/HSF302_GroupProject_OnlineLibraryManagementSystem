@@ -11,10 +11,14 @@
     </h2>
     <p>Quyền của bạn: <b th:text="${role}">[Role]</b></p>
     <hr>
-    <a class="btn btn-outline-primary" href="/reader/books">Tìm kiếm sách (UC02)</a>
-    <a class="btn btn-outline-primary" href="/admin/categories">Quản lý thể loại(UC09)</a>
-    <a class="btn btn-outline-primary" href="/admin/books">Quản lý thể sách(UC08)</a>
-    <a class="btn btn-outline-primary" href="/librarian/returns">Ghi nhận trả sách (UC07)</a>
+    <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_READER')}"
+       th:href="@{/reader/books}">Tìm kiếm sách (UC02)</a>
+    <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_ADMIN')}"
+       th:href="@{/admin/categories}">Quản lý thể loại(UC09)</a>
+    <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_ADMIN')}"
+       th:href="@{/admin/books}">Quản lý thể sách(UC08)</a>
+    <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_LIBRARIAN')}"
+       th:href="@{/librarian/returns}">Ghi nhận trả sách (UC07)</a>
     <a class="btn btn-outline-success" th:if="${#strings.contains(role.toString(), 'ROLE_READER')}"
        th:href="@{/reader/books}">Xem sách và đặt trước</a>
     <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_LIBRARIAN')}"
