@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ghi nhận trả sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7fb; }
+        .content-card { border: 0; border-radius: 16px; }
+        .action-cell { min-width: 160px; }
+    </style>
+</head>
+<body>
+<main class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a class="text-decoration-none" th:href="@{/homepage}">&larr; Trang chủ</a>
+            <h1 class="h3 mt-2 mb-1">Ghi nhận trả sách</h1>
+            <p class="text-muted mb-0">Danh sách phiếu mượn đang mượn, sắp xếp theo hạn trả gần nhất.</p>
+        </div>
+    </div>
+
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+    <div class="card content-card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Mã phiếu</th>
+                    <th>Người đọc</th>
+                    <th>Sách đã mượn</th>
+                    <th>Ngày mượn</th>
+                    <th>Hạn trả</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="record : ${borrowRecords}"
+                    th:with="isOverdue=${record.dueDate != null and record.dueDate.isBefore(now)}">
+                    <td class="fw-bold" th:text="|#${record.borrowRecordId}|">#1</td>
+                    <td>
+                        <div class="fw-semibold" th:text="${record.reader.fullName}">Người đọc</div>
+                        <small class="text-muted" th:text="${record.reader.email}">email</small>
+                    </td>
+                    <td>
+                        <div th:each="item : ${record.books}" th:text="${item.bookCopy.book.title}">Tên sách</div>
+                    </td>
+                    <td th:text="${#temporals.format(record.borrowDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                    <td>
+                        <span th:text="${#temporals.format(record.dueDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                        <span class="badge bg-danger ms-1" th:if="${isOverdue}">Quá hạn</span>
+                    </td>
+                    <td><span class="badge bg-info text-dark" th:text="${record.status}">BORROWED</span></td>
+                    <td class="text-end action-cell">
+                        <form method="post"
+                              th:action="@{/librarian/returns/{id}/return(id=${record.borrowRecordId})}"
+                              onsubmit="return confirm('Xác nhận đã trả sách cho phiếu này?');">
+                            <button class="btn btn-sm btn-success" type="submit">Ghi nhận trả</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(borrowRecords)}">
+                    <td colspan="7" class="text-center text-muted py-5">
+                        Hiện không có phiếu mượn nào đang chờ trả.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>
