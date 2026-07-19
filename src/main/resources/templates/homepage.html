@@ -62,11 +62,6 @@
         <div class="card-body p-4 p-md-5">
             <div class="row align-items-center g-4">
                 <div class="col-lg-8">
-                    <div class="text-uppercase small fw-bold mb-2" style="letter-spacing: .12em;">Admin Manager</div>
-                    <h1 class="display-6 fw-bold mb-3">Xin chào, <span th:text="${email}">admin@library.com</span></h1>
-                    <p class="mb-0 fs-5" style="max-width: 760px;">
-                        Quản lý các đầu sách chờ duyệt và theo dõi nhanh tình hình mượn sách trong hệ thống.
-                    </p>
                     <div class="d-flex flex-wrap gap-2 mt-4" th:if="${isAdmin}">
                         <a class="btn btn-light text-dark fw-semibold px-4" th:href="@{/admin/statistics}">UC12: Thống kê mượn sách</a>
                         <a class="btn btn-light text-dark fw-semibold px-4" th:href="@{/admin/books/pending}">UC10: Phê duyệt sách mới</a>
@@ -75,20 +70,6 @@
             </div>
         </div>
     </section>
-
-
-        <div class="col-lg-6" th:if="${isReader}">
-            <div class="card feature-card shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="feature-icon icon-dark mb-3">R</div>
-                    <h2 class="h4 fw-bold mb-2">UC05: Lịch sử mượn sách</h2>
-                    <p class="text-muted mb-4">
-                        Xem toàn bộ lịch sử mượn sách hiện tại và trước đây của bạn trong thư viện.
-                    </p>
-                    <a class="btn btn-success px-4" th:href="@{/reader/borrow-history}">Đi tới UC05</a>
-                </div>
-            </div>
-        </div>
     </div>
 </main>
 </body>
