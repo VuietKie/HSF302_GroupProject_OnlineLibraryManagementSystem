@@ -59,8 +59,11 @@
 <body>
 <nav class="navbar navbar-dark bg-primary shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold" th:href="@{/homepage}">Online Library</a>
-        <a class="btn btn-light btn-sm" th:href="@{/reader/reservations}">Reservation của tôi</a>
+        <a class="navbar-brand fw-bold" th:href="@{/reader/books}">Online Library</a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-light btn-sm" th:href="@{/reader/borrow-history}">Lịch sử mượn sách</a>
+            <a class="btn btn-light btn-sm" th:href="@{/reader/reservations}">Reservation của tôi</a>
+        </div>
     </div>
 </nav>
 
@@ -121,11 +124,11 @@
             <label class="form-label" for="categoryId">Thể loại</label>
             <select class="form-select" id="categoryId" name="categoryId">
                 <option value="">Tất cả thể loại</option>
-                <option th:each="category : ${allCategories}">Thể loại</option>
+                <option th:each="category : ${allCategories}"
                         th:value="${category.categoryId}"
                         th:selected="${categoryId != null and category.categoryId == categoryId}"
-                        th:text="${category.categoryName}"
-
+                        th:text="${category.categoryName}">
+                </option>
             </select>
         </div>
         <div class="col-md-2 d-flex gap-2">

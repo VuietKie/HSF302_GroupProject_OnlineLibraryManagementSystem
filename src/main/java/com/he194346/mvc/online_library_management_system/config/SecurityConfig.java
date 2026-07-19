@@ -6,6 +6,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -36,7 +37,8 @@ public class SecurityConfig {
                         .usernameParameter("email")
                         .passwordParameter("password")
                         .failureUrl("/login?error")
-                        .defaultSuccessUrl("/homepage", true)
+                        .successHandler((request, response, authentication) ->
+                                response.sendRedirect(resolveTargetUrl(authentication)))
                         .permitAll()
                 )
 
@@ -55,5 +57,21 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    private String resolveTargetUrl(Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        if (isAdmin) {
+            return "/admin/manager";
+        }
+
+        boolean isLibrarian = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_LIBRARIAN".equals(authority.getAuthority()));
+        if (isLibrarian) {
+            return "/librarian/reservations";
+        }
+
+        return "/reader/books";
     }
 }

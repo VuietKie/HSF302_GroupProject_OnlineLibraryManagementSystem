@@ -31,8 +31,6 @@
                 <select th:field="*{status}" class="form-select">
                     <option value="ACTIVE">ACTIVE</option>
                     <option value="INACTIVE">INACTIVE</option>
-                    <option th:if="${book.status != null and book.status.name() == 'PENDING'}" value="PENDING">PENDING</option>
-                    <option th:if="${book.status != null and book.status.name() == 'REJECTED'}" value="REJECTED">REJECTED</option>
                 </select>
             </div>
             <div class="mb-3">

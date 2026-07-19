@@ -9,7 +9,7 @@
 <body class="p-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Lịch sử mượn sách của tôi</h2>
-        <a class="btn btn-outline-secondary" th:href="@{/homepage}">← Quay lại trang chủ</a>
+        <a class="btn btn-outline-secondary" th:href="@{/reader/books}">← Quay lại trang trước</a>
     </div>
 
     <div th:if="${#lists.isEmpty(borrowHistory)}" class="alert alert-info">

@@ -1,27 +1,95 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
-    <title>Trang chủ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #eef3fb;
+        }
+        .hero-panel {
+            border: 0;
+            border-radius: 24px;
+            background:
+                    radial-gradient(circle at top right, rgba(255,255,255,.24), transparent 28%),
+                    linear-gradient(135deg, #123a7d, #266de8 58%, #5ca8ff);
+            color: #fff;
+            overflow: hidden;
+        }
+        .feature-card {
+            border: 0;
+            border-radius: 20px;
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 36px rgba(18,58,125,.12) !important;
+        }
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .icon-warning {
+            background: #fff3cd;
+            color: #996c00;
+        }
+        .icon-dark {
+            background: #dfe7ff;
+            color: #1f3f86;
+        }
+    </style>
 </head>
+<body>
+<nav class="navbar navbar-dark bg-primary shadow-sm">
+    <div class="container">
+        <span class="navbar-brand fw-bold">Online Library Admin</span>
+        <form th:action="@{/logout}" method="post" class="mb-0">
+            <button class="btn btn-light btn-sm">Đăng xuất</button>
+        </form>
+    </div>
+</nav>
 
-<body class="p-5">
-    <h2>
-        Xin chào, <span th:text="${email}">user</span>
-    </h2>
-    <p>Quyền của bạn: <b th:text="${role}">[Role]</b></p>
-    <hr>
-    <!-- <a class="btn btn-outline-primary" href="/admin/categories">Quản lý thể loại(UC09)</a>
-    <a class="btn btn-outline-primary" href="/admin/books">Quản lý thể sách(UC08)</a>
-    <a class="btn btn-outline-primary" href="/librarian/returns">Ghi nhận trả sách (UC07)</a> -->
-    <a th:if="${isAdmin}" class="btn btn-outline-warning" href="/admin/books/pending">Phê duyệt sách mới (UC10)</a>
-    <a th:if="${isAdmin}" class="btn btn-outline-dark" href="/admin/statistics">Thống kê mượn sách (UC12)</a>
-    <a th:if="${isReader}" class="btn btn-outline-success" href="/reader/borrow-history">Lịch sử mượn sách (UC05)</a>
-    <form th:action="@{/logout}" method="post" class="mt-4">
-        <button class="btn btn-danger">Đăng xuất</button>
-    </form>
+<main class="container py-5">
+    <section class="card hero-panel shadow-lg mb-4">
+        <div class="card-body p-4 p-md-5">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <div class="text-uppercase small fw-bold mb-2" style="letter-spacing: .12em;">Admin Manager</div>
+                    <h1 class="display-6 fw-bold mb-3">Xin chào, <span th:text="${email}">admin@library.com</span></h1>
+                    <p class="mb-0 fs-5" style="max-width: 760px;">
+                        Quản lý các đầu sách chờ duyệt và theo dõi nhanh tình hình mượn sách trong hệ thống.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2 mt-4" th:if="${isAdmin}">
+                        <a class="btn btn-light text-dark fw-semibold px-4" th:href="@{/admin/statistics}">UC12: Thống kê mượn sách</a>
+                        <a class="btn btn-light text-dark fw-semibold px-4" th:href="@{/admin/books/pending}">UC10: Phê duyệt sách mới</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+        <div class="col-lg-6" th:if="${isReader}">
+            <div class="card feature-card shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="feature-icon icon-dark mb-3">R</div>
+                    <h2 class="h4 fw-bold mb-2">UC05: Lịch sử mượn sách</h2>
+                    <p class="text-muted mb-4">
+                        Xem toàn bộ lịch sử mượn sách hiện tại và trước đây của bạn trong thư viện.
+                    </p>
+                    <a class="btn btn-success px-4" th:href="@{/reader/borrow-history}">Đi tới UC05</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 </body>
-
 </html>

@@ -10,11 +10,21 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class HomeController {
     @GetMapping("/homepage")
     public String homepage(Authentication authentication, Model model) {
+        populateHomeModel(authentication, model);
+        return "homepage";
+    }
+
+    @GetMapping("/admin/manager")
+    public String adminManager(Authentication authentication, Model model) {
+        populateHomeModel(authentication, model);
+        return "homepage";
+    }
+
+    private void populateHomeModel(Authentication authentication, Model model) {
         model.addAttribute("email",authentication.getName());
         model.addAttribute("role",authentication.getAuthorities());
         model.addAttribute("isAdmin", hasRole(authentication, "ROLE_ADMIN"));
         model.addAttribute("isReader", hasRole(authentication, "ROLE_READER"));
-        return "homepage";
     }
 
     private boolean hasRole(Authentication authentication, String role) {
