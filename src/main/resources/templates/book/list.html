@@ -11,6 +11,7 @@
         <h2>Quản lý sách</h2>
         <a class="btn btn-primary" th:href="@{/admin/books/new}">+ Thêm sách</a>
     </div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
     <table class="table table-bordered table-striped align-middle">
         <thead>
             <tr>
@@ -24,7 +25,8 @@
             </tr>
         </thead>
         <tbody>
-            <tr th:each="book : ${books}">
+            <tr th:each="book : ${books}"
+                th:with="canEdit=${book.addedBy == null or #strings.toLowerCase(book.addedBy.email) != #strings.toLowerCase(currentUserEmail)}">
                 <td>
                     <img th:if="${book.coverImg!=null}" th:src="@{${book.coverImg}}" width="50" alt="cover">
                     <span th:if="${book.coverImg==null}">-</span>
@@ -37,7 +39,8 @@
                 <td><span th:text="${book.availableCopies}"></span>/<span th:text="${book.totalCopies}"></span> </td>
                 <td th:text="${book.status}"></td>
                 <td>
-                    <a class="btn btn-sm btn-warning" th:href="@{/admin/books/edit/{id}(id=${book.bookId})}">Sửa</a>
+                    <a class="btn btn-sm btn-warning" th:if="${canEdit}" th:href="@{/admin/books/edit/{id}(id=${book.bookId})}">Sửa</a>
+                    <span class="btn btn-sm btn-warning disabled" th:unless="${canEdit}" style="pointer-events: none;" title="Bạn đã thêm sách này, cần admin khác sửa">Sửa</span>
                     <a class="btn btn-sm btn-outline-danger" th:href="@{/admin/books/delete/{id}(id=${book.bookId})}" onclick="return confirm('Bạn có chắc chắn muốn xóa sách này không?')">Xóa</a>
                 </td>
             </tr>

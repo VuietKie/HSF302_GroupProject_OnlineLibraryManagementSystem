@@ -13,7 +13,8 @@ public interface BookService {
     Page<ReaderBookResponseDTO> searchActiveBooksForReader(String title, String author, Long categoryId, int page);
     ReaderBookResponseDTO findActiveBookDetailForReader(Long id);
     boolean hasReaderBookFilters(String title, String author, Long categoryId);
-    void create(BookRequestDTO bookRequestDTO);
-    void update(Long id, BookRequestDTO bookRequestDTO);
+    void create(BookRequestDTO bookRequestDTO, String actorEmail);
+    void update(Long id, BookRequestDTO bookRequestDTO, String actorEmail);
+    Book findEditable(Long id, String actorEmail);
     void delete(Long id);
 }

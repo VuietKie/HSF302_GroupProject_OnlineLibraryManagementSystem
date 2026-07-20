@@ -32,6 +32,10 @@ public class Book {
     @Enumerated(EnumType.STRING)
     private BookStatus status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "added_by")
+    private User addedBy;
+
     @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
     private Set<BookCopy> copies = new HashSet<>();
 

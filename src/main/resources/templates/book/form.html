@@ -26,7 +26,10 @@
                 <input type="number" th:field="*{totalCopies}" class="form-control">
                 <div class="text-danger" th:if="${#fields.hasErrors('totalCopies')}" th:errors="*{totalCopies}"></div>
             </div>
-            <div class="mb-3">
+            <div class="mb-3" th:if="${isCreate}">
+                <small class="text-muted">Sách mới sẽ ở trạng thái chờ duyệt (INACTIVE). Quản trị viên duyệt để chuyển sang ACTIVE (công khai cho độc giả).</small>
+            </div>
+            <div class="mb-3" th:unless="${isCreate}">
                 <label class="form-label">Trạng thái</label>
                 <select th:field="*{status}" class="form-select">
                     <option value="ACTIVE">ACTIVE</option>
