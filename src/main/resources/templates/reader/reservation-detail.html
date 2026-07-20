@@ -65,7 +65,7 @@
                 </table>
             </div>
 
-            <form class="text-end mt-4" method="post"
+            <form id="submitReservationForm" class="text-end mt-4" method="post"
                   th:if="${reservation.status.name() == 'HOLDING'}"
                   th:action="@{/reader/reservations/{id}/submit(id=${reservation.reservationId})}">
                 <button class="btn btn-primary px-4" type="submit">Gửi thư viện phê duyệt</button>
@@ -89,6 +89,22 @@
     }
     updateCountdown();
     setInterval(updateCountdown, 1000);
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var submitForm = document.getElementById("submitReservationForm");
+        if (submitForm == null) {
+            return;
+        }
+
+        submitForm.addEventListener("submit", function () {
+            try {
+                sessionStorage.removeItem("readerReservationCart");
+            } catch (error) {
+                // Ignore storage errors so submitting still works normally.
+            }
+        });
+    });
 </script>
 </body>
 </html>
