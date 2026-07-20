@@ -1,5 +1,6 @@
 package com.he194346.mvc.online_library_management_system.service.impl;
 
+import com.he194346.mvc.online_library_management_system.dto.user.ChangePasswordRequestDTO;
 import com.he194346.mvc.online_library_management_system.dto.user.RegisterRequestDTO;
 import com.he194346.mvc.online_library_management_system.dto.user.UserResponseDTO;
 import com.he194346.mvc.online_library_management_system.entity.User;
@@ -37,5 +38,21 @@ public class UserServiceIpml implements UserService {
         user.setRole(READER);
         user.setStatus(ACTIVE);
         return userMapper.toDto(userRepository.save(user));
+    }
+
+    @Override
+    public void changePassword(String email, ChangePasswordRequestDTO request) {
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy người dùng");
+        }
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new CustomException(ErrorCode.WRONG_PASSWORD, "Mật khẩu hiện tại không đúng");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }

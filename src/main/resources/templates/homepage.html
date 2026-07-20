@@ -23,6 +23,7 @@
        th:href="@{/reader/books}">Xem sách và đặt trước</a>
     <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_LIBRARIAN')}"
        th:href="@{/librarian/reservations}">Reservation chờ phê duyệt</a>
+    <a class="btn btn-outline-secondary" th:href="@{/change-password}">Đổi mật khẩu</a>
     <form th:action="@{/logout}" method="post" class="mt-4">
         <button class="btn btn-danger">Đăng xuất</button>
     </form>
