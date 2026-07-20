@@ -19,8 +19,14 @@
        th:href="@{/admin/books}">Quản lý thể sách(UC08)</a>
     <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_LIBRARIAN')}"
        th:href="@{/librarian/returns}">Ghi nhận trả sách (UC07)</a>
+    <a class="btn btn-outline-warning" th:if="${#strings.contains(role.toString(), 'ROLE_ADMIN')}"
+       th:href="@{/admin/pending-books}">Phê duyệt sách mới (UC10)</a>
+    <a class="btn btn-outline-dark" th:if="${#strings.contains(role.toString(), 'ROLE_ADMIN')}"
+       th:href="@{/admin/statistics-report}">Thống kê mượn sách (UC12)</a>
     <a class="btn btn-outline-success" th:if="${#strings.contains(role.toString(), 'ROLE_READER')}"
        th:href="@{/reader/reservations}">Reservation của tôi</a>
+    <a class="btn btn-outline-success" th:if="${#strings.contains(role.toString(), 'ROLE_READER')}"
+       th:href="@{/reader/history}">Lịch sử mượn sách (UC05)</a>
     <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_LIBRARIAN')}"
        th:href="@{/librarian/reservations}">Reservation chờ phê duyệt</a>
     <a class="btn btn-outline-secondary" th:href="@{/change-password}">Đổi mật khẩu</a>

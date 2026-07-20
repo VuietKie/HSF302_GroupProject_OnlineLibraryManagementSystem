@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phê duyệt sách mới</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Sách đang ở trạng thái INACTIVE</h2>
+        <a class="btn btn-outline-secondary" th:href="@{/homepage}">← Quay lại trang chủ</a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <div th:if="${#lists.isEmpty(pendingBooks)}" class="alert alert-info">
+        Hiện không có sách nào ở trạng thái INACTIVE.
+    </div>
+
+    <table th:if="${not #lists.isEmpty(pendingBooks)}" class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Tên sách</th>
+            <th>Mô tả</th>
+            <th>Tổng bản</th>
+            <th>Có sẵn</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="book : ${pendingBooks}">
+            <td th:text="${book.bookId}"></td>
+            <td th:text="${book.title}"></td>
+            <td th:text="${book.description} ?: '-'"></td>
+            <td th:text="${book.totalCopies}"></td>
+            <td th:text="${book.availableCopies}"></td>
+            <td><span class="badge bg-secondary" th:text="${book.status}"></span></td>
+            <td>
+                <form th:action="@{/admin/pending-books/activate/{id}(id=${book.bookId})}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-success">Chuyển sang ACTIVE</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</body>
+</html>

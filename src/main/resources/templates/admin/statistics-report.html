@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thống kê mượn sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Báo cáo thống kê mượn sách</h2>
+        <a class="btn btn-outline-secondary" th:href="@{/homepage}">← Quay lại trang chủ</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card h-100 border-dark">
+                <div class="card-body">
+                    <div class="text-muted">Tổng phiếu mượn</div>
+                    <div class="fs-3 fw-bold" th:text="${statistics.totalBorrowRecords}">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-primary">
+                <div class="card-body">
+                    <div class="text-muted">Đang mượn</div>
+                    <div class="fs-3 fw-bold text-primary" th:text="${statistics.currentlyBorrowedCount}">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-success">
+                <div class="card-body">
+                    <div class="text-muted">Đã trả</div>
+                    <div class="fs-3 fw-bold text-success" th:text="${statistics.returnedCount}">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-danger">
+                <div class="card-body">
+                    <div class="text-muted">Quá hạn</div>
+                    <div class="fs-3 fw-bold text-danger" th:text="${statistics.overdueCount}">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header fw-bold">Xu hướng mượn sách theo tháng</div>
+                <div th:if="${#lists.isEmpty(statistics.monthlyBorrowTrends)}" class="card-body text-muted">
+                    Chưa có dữ liệu thống kê theo tháng.
+                </div>
+                <div th:if="${not #lists.isEmpty(statistics.monthlyBorrowTrends)}" class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                        <tr>
+                            <th>Tháng</th>
+                            <th>Số lượt mượn</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="trend : ${statistics.monthlyBorrowTrends}">
+                            <td th:text="${trend.label}"></td>
+                            <td th:text="${trend.borrowCount}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header fw-bold">Sách được mượn nhiều nhất</div>
+                <div th:if="${#lists.isEmpty(statistics.topBorrowedBooks)}" class="card-body text-muted">
+                    Chưa có dữ liệu sách được mượn.
+                </div>
+                <div th:if="${not #lists.isEmpty(statistics.topBorrowedBooks)}" class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                        <tr>
+                            <th>Tên sách</th>
+                            <th>Số lượt mượn</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="book : ${statistics.topBorrowedBooks}">
+                            <td th:text="${book.title}"></td>
+                            <td th:text="${book.borrowCount}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
