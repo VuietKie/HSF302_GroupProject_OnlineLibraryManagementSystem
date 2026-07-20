@@ -55,4 +55,12 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
             order by b.requestDate desc
             """)
     List<BorrowRecord> findBorrowHistoryByReaderId(@Param("readerId") Long readerId);
+
+    @Query("""
+            select count(b) > 0
+            from BorrowRecord b
+            where b.borrowRecordId = :borrowRecordId
+              and b.reader.userId = :readerId
+            """)
+    boolean existsOwnedBorrowRecord(@Param("borrowRecordId") Long borrowRecordId, @Param("readerId") Long readerId);
 }
