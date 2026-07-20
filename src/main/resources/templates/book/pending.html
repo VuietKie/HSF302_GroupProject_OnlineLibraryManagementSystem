@@ -8,12 +8,15 @@
 </head>
 <body class="p-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Phê duyệt sách mới</h2>
-        <a class="btn btn-outline-secondary" th:href="@{/admin/books}">← Quay lại danh sách sách</a>
+        <div>
+            <h2 class="mb-1">UC10: Phê duyệt sách mới</h2>
+            <p class="text-muted mb-0">Các sách ở trạng thái <b>INACTIVE</b> có thể được chuyển sang <b>ACTIVE</b>.</p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/admin/manager}">← Quay lại trang admin</a>
     </div>
 
     <div th:if="${#lists.isEmpty(pendingBooks)}" class="alert alert-info">
-        Không có sách nào đang chờ phê duyệt.
+        Không có sách nào ở trạng thái INACTIVE để phê duyệt.
     </div>
 
     <table th:if="${not #lists.isEmpty(pendingBooks)}" class="table table-bordered table-striped align-middle">
@@ -24,7 +27,8 @@
                 <th>Tác giả</th>
                 <th>Thể loại</th>
                 <th>Mô tả</th>
-                <th style="width: 200px;">Hành động</th>
+                <th>Trạng thái hiện tại</th>
+                <th style="width: 220px;">Hành động</th>
             </tr>
         </thead>
         <tbody>
@@ -42,13 +46,13 @@
                 </td>
                 <td th:text="${book.description}"></td>
                 <td>
-                    <form th:action="@{/admin/books/approve/{id}(id=${book.bookId})}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-success">✔ Phê duyệt</button>
-                    </form>
-                    <form th:action="@{/admin/books/reject/{id}(id=${book.bookId})}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Bạn có chắc chắn muốn từ chối sách này không?')">
-                            ✘ Từ chối
+                    <span class="badge bg-secondary" th:text="${book.status}">INACTIVE</span>
+                </td>
+                <td>
+                    <form th:action="@{/admin/books/approve/{id}(id=${book.bookId})}" method="post">
+                        <button type="submit" class="btn btn-sm btn-success"
+                                onclick="return confirm('Chuyển trạng thái sách từ INACTIVE sang ACTIVE?')">
+                            Chuyển sang ACTIVE
                         </button>
                     </form>
                 </td>
