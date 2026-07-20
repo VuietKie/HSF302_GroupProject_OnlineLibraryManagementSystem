@@ -91,7 +91,6 @@
                 </div>
                 <div id="cartItems" class="bg-white rounded-3"></div>
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
-                    <small class="text-muted">Sách được giữ tối đa 2 giờ trước khi bạn gửi Librarian phê duyệt.</small>
                     <button id="createReservationButton" class="btn btn-success px-4" type="submit" disabled>
                         Tạo reservation
                     </button>
@@ -207,6 +206,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        var RESERVATION_SESSION_KEY = "readerReservationCart";
         var cart = {};
         var cartPanel = document.getElementById("cartPanel");
         var cartItems = document.getElementById("cartItems");
@@ -218,15 +218,92 @@
         var cartBadge = document.getElementById("cartBadge");
         var bookCards = document.querySelectorAll(".book-card[data-book-id]");
 
+        function readStoredCart() {
+            try {
+                var storedCart = sessionStorage.getItem(RESERVATION_SESSION_KEY);
+                if (storedCart == null) {
+                    return {};
+                }
+
+                var parsedCart = JSON.parse(storedCart);
+                if (parsedCart == null || typeof parsedCart !== "object" || Array.isArray(parsedCart)) {
+                    return {};
+                }
+                return parsedCart;
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function normalizeBook(book) {
+            if (book == null || book.bookId == null) {
+                return null;
+            }
+
+            var bookId = String(book.bookId);
+            var title = String(book.title || "").trim();
+            var available = Math.floor(Number(book.available));
+            var quantity = Math.floor(Number(book.quantity));
+            if (bookId === "" || title === "" || !isFinite(available) || available <= 0
+                || !isFinite(quantity) || quantity <= 0) {
+                return null;
+            }
+
+            return {
+                bookId: bookId,
+                title: title,
+                available: available,
+                quantity: Math.min(quantity, available)
+            };
+        }
+
+        function loadCartFromSession() {
+            var storedCart = readStoredCart();
+            var bookIds = Object.keys(storedCart);
+            for (var index = 0; index < bookIds.length; index++) {
+                var book = normalizeBook(storedCart[bookIds[index]]);
+                if (book != null) {
+                    cart[book.bookId] = book;
+                }
+            }
+        }
+
+        function saveCartToSession() {
+            var storableCart = {};
+            var bookIds = Object.keys(cart);
+            for (var index = 0; index < bookIds.length; index++) {
+                var book = normalizeBook(cart[bookIds[index]]);
+                if (book != null) {
+                    storableCart[book.bookId] = book;
+                }
+            }
+
+            try {
+                if (Object.keys(storableCart).length === 0) {
+                    sessionStorage.removeItem(RESERVATION_SESSION_KEY);
+                } else {
+                    sessionStorage.setItem(RESERVATION_SESSION_KEY, JSON.stringify(storableCart));
+                }
+            } catch (error) {
+                // Ignore storage errors so the reservation form still works normally.
+            }
+        }
+
         function initializeCart() {
+            loadCartFromSession();
             for (var index = 0; index < bookCards.length; index++) {
                 var card = bookCards[index];
                 var initialQuantity = Number(card.getAttribute("data-initial-quantity"));
-                if (initialQuantity > 0) {
+                if (initialQuantity > 0 && cart[card.getAttribute("data-book-id")] == null) {
                     addBookFromCard(card, initialQuantity);
+                } else {
+                    refreshBookFromCard(card);
                 }
             }
             renderCart();
+            if (Object.keys(cart).length > 0) {
+                cartPanel.classList.add("show");
+            }
         }
 
         function addBookFromCard(card, quantity) {
@@ -241,9 +318,25 @@
                 bookId: bookId,
                 title: card.getAttribute("data-book-title"),
                 available: available,
-                quantity: safeQuantity,
-                card: card
+                quantity: safeQuantity
             };
+        }
+
+        function refreshBookFromCard(card) {
+            var bookId = card.getAttribute("data-book-id");
+            if (cart[bookId] == null) {
+                return;
+            }
+
+            var available = Number(card.getAttribute("data-available"));
+            if (available <= 0) {
+                delete cart[bookId];
+                return;
+            }
+
+            cart[bookId].title = card.getAttribute("data-book-title");
+            cart[bookId].available = available;
+            cart[bookId].quantity = Math.min(cart[bookId].quantity, available);
         }
 
         function addOneBook(card) {
@@ -368,6 +461,7 @@
             emptyCartMessage.style.display = bookIds.length === 0 ? "block" : "none";
             createButton.disabled = bookIds.length === 0;
             updateCardButtons();
+            saveCartToSession();
         }
 
         for (var index = 0; index < bookCards.length; index++) {
