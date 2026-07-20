@@ -1,5 +1,6 @@
 package com.he194346.mvc.online_library_management_system.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,7 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/reader/**").hasRole("READER")
                         .requestMatchers("/librarian/**").hasRole("LIBRARIAN")
-                        .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers("/login", "/register", "/error", "/error/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
@@ -38,6 +39,13 @@ public class SecurityConfig {
                         .failureUrl("/login?error")
                         .defaultSuccessUrl("/homepage", true)
                         .permitAll()
+                )
+
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                                    "Bạn không có quyền truy cập chức năng này");
+                        })
                 )
 
                 .logout(logout -> logout
