@@ -83,6 +83,10 @@ public class BookServiceImpl implements BookService {
         Book book = new Book();
         applyData(book,bookRequestDTO);
         book.setAvailableCopies(bookRequestDTO.getTotalCopies());
+        // Sách mới luôn ở trạng thái chờ duyệt (INACTIVE), không tin trạng thái FE gửi lên.
+        // Hiện tại chỉ đổi được sang ACTIVE qua form Sửa sách (Admin); UC10 (approve/reject
+        // riêng cho Librarian) sẽ thay thế bước này sau khi merge.
+        book.setStatus(BookStatus.INACTIVE);
         bookRepository.save(book);
     }
 

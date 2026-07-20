@@ -3,7 +3,6 @@ package com.he194346.mvc.online_library_management_system.controller;
 import com.he194346.mvc.online_library_management_system.dto.book.BookRequestDTO;
 import com.he194346.mvc.online_library_management_system.entity.Author;
 import com.he194346.mvc.online_library_management_system.entity.Book;
-import com.he194346.mvc.online_library_management_system.enums.BookStatus;
 import com.he194346.mvc.online_library_management_system.service.AuthorService;
 import com.he194346.mvc.online_library_management_system.service.BookService;
 import com.he194346.mvc.online_library_management_system.service.CategoryService;
@@ -39,10 +38,10 @@ public class BookController {
     @GetMapping("/new")
     public String createForm(Model model){
         BookRequestDTO dto = new BookRequestDTO();
-        dto.setStatus(BookStatus.ACTIVE);
         model.addAttribute("book", dto);
         model.addAttribute("actionUrl","/admin/books");
         model.addAttribute("formTitle","Thêm sách");
+        model.addAttribute("isCreate", true);
         loadOptions(model);
         return "book/form";
     }
@@ -53,6 +52,7 @@ public class BookController {
         if(result.hasErrors()){
             model.addAttribute("actionUrl", "/admin/books");
             model.addAttribute("formTitle","Thêm sách");
+            model.addAttribute("isCreate", true);
             loadOptions(model);
             return "book/form";
         }
@@ -76,6 +76,7 @@ public class BookController {
         model.addAttribute("book", dto);
         model.addAttribute("actionUrl","/admin/books/edit/"+id);
         model.addAttribute("formTitle","Sửa sách");
+        model.addAttribute("isCreate", false);
         loadOptions(model);
         return "book/form";
     }
@@ -85,6 +86,7 @@ public class BookController {
         if(result.hasErrors()){
             model.addAttribute("actionUrl", "/admin/books/edit/"+id);
             model.addAttribute("formTitle","Sửa sách");
+            model.addAttribute("isCreate", false);
             loadOptions(model);
             return "book/form";
         }
