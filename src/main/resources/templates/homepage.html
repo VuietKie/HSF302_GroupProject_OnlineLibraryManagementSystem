@@ -29,20 +29,26 @@
 
     <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_LIBRARIAN')}"
        th:href="@{/librarian/returns}">Ghi nhận trả sách (UC07)</a>
-
+    <a class="btn btn-outline-success" th:if="${#strings.contains(role.toString(), 'ROLE_READER')}"
+       th:href="@{/reader/reservations}">Reservation của tôi</a>
     <a class="btn btn-outline-primary" th:if="${#strings.contains(role.toString(), 'ROLE_LIBRARIAN')}"
        th:href="@{/librarian/reservations}">Reservation chờ phê duyệt</a>
-
-    <a class="btn btn-outline-success" th:if="${#strings.contains(role.toString(), 'ROLE_READER')}"
-       th:href="@{/reader/books}">Xem sách và đặt trước</a>
-
+  
     <a class="btn btn-outline-success" th:if="${#strings.contains(role.toString(), 'ROLE_READER')}"
        th:href="@{/reader/borrow-history}">Lịch sử mượn sách (UC05)</a>
 
     <a class="btn btn-outline-secondary" th:href="@{/change-password}">Đổi mật khẩu</a>
-
-    <form th:action="@{/logout}" method="post" class="mt-4">
+    <form id="logoutForm" th:action="@{/logout}" method="post" class="mt-4">
         <button class="btn btn-danger">Đăng xuất</button>
     </form>
+    <script>
+        document.getElementById("logoutForm").addEventListener("submit", function () {
+            try {
+                sessionStorage.removeItem("readerReservationCart");
+            } catch (error) {
+                // Ignore storage errors so logging out still works normally.
+            }
+        });
+    </script>
 </body>
 </html>

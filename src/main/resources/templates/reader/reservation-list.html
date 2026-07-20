@@ -38,7 +38,7 @@
                     <td>
                         <span th:if="${reservation.expiredAt != null}"
                               th:text="${#temporals.format(reservation.expiredAt, 'dd/MM/yyyy HH:mm')}"></span>
-                        <span class="text-success" th:if="${reservation.expiredAt == null}">Không giới hạn</span>
+                        <span class="text-success" th:if="${reservation.expiredAt == null}">Chưa tới thời gian đóng</span>
                     </td>
                     <td>
                         <span class="badge"
