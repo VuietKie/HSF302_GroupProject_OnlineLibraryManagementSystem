@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface BorrowService {
     List<BorrowRecord> getBorrowHistoryByReader(Long readerId);
+
+    boolean existsOwnedBorrowRecord(Long borrowRecordId, Long readerId);
 }

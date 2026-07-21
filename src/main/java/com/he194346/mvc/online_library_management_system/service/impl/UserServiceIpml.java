@@ -55,4 +55,13 @@ public class UserServiceIpml implements UserService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
+
+    @Override
+    public User findByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy người dùng");
+        }
+        return user;
+    }
 }
