@@ -4,9 +4,8 @@ import com.he194346.mvc.online_library_management_system.dto.statistics.BorrowTr
 import com.he194346.mvc.online_library_management_system.dto.statistics.StatisticsOverviewDTO;
 import com.he194346.mvc.online_library_management_system.dto.statistics.TopBorrowedBookDTO;
 import com.he194346.mvc.online_library_management_system.enums.BorrowStatus;
-import com.he194346.mvc.online_library_management_system.repository.StatisticsBookBorrowRecordRepository;
-import com.he194346.mvc.online_library_management_system.repository.StatisticsBorrowRecordRepository;
 import com.he194346.mvc.online_library_management_system.service.StatisticsService;
+import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,22 +23,19 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     private static final DateTimeFormatter MONTH_LABEL_FORMAT = DateTimeFormatter.ofPattern("MM/yyyy");
 
-    private final StatisticsBorrowRecordRepository statisticsBorrowRecordRepository;
-    private final StatisticsBookBorrowRecordRepository statisticsBookBorrowRecordRepository;
+    private final EntityManager entityManager;
 
     @Override
     @Transactional(readOnly = true)
     public StatisticsOverviewDTO getBorrowingStatistics() {
-        long totalBorrowRecords = statisticsBorrowRecordRepository.count();
-        long currentlyBorrowedCount = statisticsBorrowRecordRepository.countByStatus(BorrowStatus.BORROWED);
-        long returnedCount = statisticsBorrowRecordRepository.countByStatus(BorrowStatus.RETURNED);
-        long overdueCount = statisticsBorrowRecordRepository.countByStatus(BorrowStatus.OVERDUE);
-        long requestedCount = statisticsBorrowRecordRepository.countByStatus(BorrowStatus.REQUESTED);
+        long totalBorrowRecords = countBorrowRecords();
+        long currentlyBorrowedCount = countBorrowRecordsByStatus(BorrowStatus.BORROWED);
+        long returnedCount = countBorrowRecordsByStatus(BorrowStatus.RETURNED);
+        long overdueCount = countBorrowRecordsByStatus(BorrowStatus.OVERDUE);
+        long requestedCount = countBorrowRecordsByStatus(BorrowStatus.REQUESTED);
 
-        List<BorrowTrendPointDTO> monthlyBorrowTrends = buildTrendPoints(
-                statisticsBorrowRecordRepository.findMonthlyBorrowCounts());
-        List<TopBorrowedBookDTO> topBorrowedBooks = buildTopBorrowedBooks(
-                statisticsBookBorrowRecordRepository.findTopBorrowedBooks());
+        List<BorrowTrendPointDTO> monthlyBorrowTrends = buildTrendPoints(findMonthlyBorrowCounts());
+        List<TopBorrowedBookDTO> topBorrowedBooks = buildTopBorrowedBooks(findTopBorrowedBooks());
 
         return new StatisticsOverviewDTO(
                 totalBorrowRecords,
@@ -50,6 +46,39 @@ public class StatisticsServiceImpl implements StatisticsService {
                 monthlyBorrowTrends,
                 topBorrowedBooks
         );
+    }
+
+    private long countBorrowRecords() {
+        return entityManager.createQuery("select count(b) from BorrowRecord b", Long.class)
+                .getSingleResult();
+    }
+
+    private long countBorrowRecordsByStatus(BorrowStatus status) {
+        return entityManager.createQuery(
+                        "select count(b) from BorrowRecord b where b.status = :status", Long.class)
+                .setParameter("status", status)
+                .getSingleResult();
+    }
+
+    private List<Object[]> findMonthlyBorrowCounts() {
+        return entityManager.createQuery("""
+                select year(b.borrowDate), month(b.borrowDate), count(b)
+                from BorrowRecord b
+                where b.borrowDate is not null
+                group by year(b.borrowDate), month(b.borrowDate)
+                order by year(b.borrowDate), month(b.borrowDate)
+                """, Object[].class)
+                .getResultList();
+    }
+
+    private List<Object[]> findTopBorrowedBooks() {
+        return entityManager.createQuery("""
+                select bbr.bookCopy.book.title, count(bbr)
+                from BookBorrowRecord bbr
+                group by bbr.bookCopy.book.title
+                order by count(bbr) desc, bbr.bookCopy.book.title asc
+                """, Object[].class)
+                .getResultList();
     }
 
     private List<BorrowTrendPointDTO> buildTrendPoints(List<Object[]> rows) {

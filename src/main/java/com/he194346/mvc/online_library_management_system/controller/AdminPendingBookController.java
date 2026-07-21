@@ -24,8 +24,8 @@ public class AdminPendingBookController {
 
     @PostMapping("/activate/{id}")
     public String activateBook(@PathVariable Long id,
-                               Authentication authentication,
-                               RedirectAttributes redirectAttributes) {
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
         try {
             bookService.approvePendingBook(id, authentication.getName());
             redirectAttributes.addFlashAttribute("successMessage", "Đã chuyển sách sang ACTIVE.");

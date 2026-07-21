@@ -13,7 +13,6 @@ import com.he194346.mvc.online_library_management_system.mapper.BookMapper;
 import com.he194346.mvc.online_library_management_system.repository.AuthorRepository;
 import com.he194346.mvc.online_library_management_system.repository.BookRepository;
 import com.he194346.mvc.online_library_management_system.repository.CategoryRepository;
-import com.he194346.mvc.online_library_management_system.repository.PendingBookRepository;
 import com.he194346.mvc.online_library_management_system.repository.UserRepository;
 import com.he194346.mvc.online_library_management_system.service.BookService;
 import lombok.AllArgsConstructor;
@@ -35,7 +34,6 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
     private final CategoryRepository categoryRepository;
-    private final PendingBookRepository pendingBookRepository;
     private final UserRepository userRepository;
     private final BookMapper bookMapper;
 
@@ -130,7 +128,9 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public List<Book> findInactiveBooks() {
-        return pendingBookRepository.findByStatus(BookStatus.INACTIVE);
+        return bookRepository.findAll().stream()
+                .filter(book -> book.getStatus() == BookStatus.INACTIVE)
+                .toList();
     }
 
     @Override
