@@ -14,8 +14,11 @@ public class AdminStatisticsReportController {
 
     private final StatisticsService statisticsService;
 
+    // [READ] Hiển thị trang báo cáo thống kê mượn sách
     @GetMapping
     public String viewStatistics(Model model) {
+        // Lấy dữ liệu thống kê mượn sách từ StatisticsService
+        // và gửi dữ liệu sang giao diện với tên "statistics"
         model.addAttribute("statistics", statisticsService.getBorrowingStatistics());
         return "admin/statistics-report";
     }
