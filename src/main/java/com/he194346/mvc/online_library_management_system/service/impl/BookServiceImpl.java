@@ -125,6 +125,26 @@ public class BookServiceImpl implements BookService {
         bookRepository.delete(book);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Book> findInactiveBooks() {
+        return bookRepository.findAll().stream()
+                .filter(book -> book.getStatus() == BookStatus.INACTIVE)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void approvePendingBook(Long id, String actorEmail) {
+        Book book = findById(id);
+        validateEditable(book, actorEmail);
+
+        if (book.getStatus() == BookStatus.INACTIVE) {
+            book.setStatus(BookStatus.ACTIVE);
+            bookRepository.save(book);
+        }
+    }
+
     // Admin đã thêm sách (added_by) không được tự sửa/duyệt chính sách của mình;
     // sách chưa có added_by (dữ liệu cũ trước khi có cột này) thì admin nào cũng sửa được.
     private void validateEditable(Book book, String actorEmail) {

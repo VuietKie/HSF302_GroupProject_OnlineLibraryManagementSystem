@@ -17,4 +17,6 @@ public interface BookService {
     void update(Long id, BookRequestDTO bookRequestDTO, String actorEmail);
     Book findEditable(Long id, String actorEmail);
     void delete(Long id);
+    List<Book> findInactiveBooks();
+    void approvePendingBook(Long id, String actorEmail);
 }

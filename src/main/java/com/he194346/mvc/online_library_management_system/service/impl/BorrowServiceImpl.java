@@ -20,4 +20,10 @@ public class BorrowServiceImpl implements BorrowService {
     public List<BorrowRecord> getBorrowHistoryByReader(Long readerId) {
         return readerBorrowHistoryRepository.findBorrowHistoryByReaderId(readerId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsOwnedBorrowRecord(Long borrowRecordId, Long readerId) {
+        return readerBorrowHistoryRepository.existsOwnedBorrowRecord(borrowRecordId, readerId);
+    }
 }
